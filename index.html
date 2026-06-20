@@ -98,6 +98,19 @@ header{
 .submit-btn:hover{background:var(--teal-dim);box-shadow:0 0 20px rgba(15,244,198,.3)}
 .submit-btn:active{transform:scale(.98)}
 .submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.submit-btn.secondary-btn{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--teal);
+}
+.submit-btn.secondary-btn:hover{
+  background:rgba(15,244,198,0.08);
+  border-color:var(--teal);
+  box-shadow:0 0 20px rgba(15,244,198,0.15);
+}
+.submit-btn.secondary-btn .spinner{
+  border-top-color:var(--teal);
+}
 .spinner{
   width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#0A0E1A;
   border-radius:50%;animation:spin .7s linear infinite;display:none;
@@ -238,13 +251,8 @@ header{
     <div class="field">
       <label>Event Type</label>
       <select id="event_type">
-        <option value="Accident">Accident</option>
-        <option value="Breakdown">Vehicle Breakdown</option>
-        <option value="Flood">Flood / Waterlogging</option>
-        <option value="Fire">Fire / Hazmat</option>
-        <option value="Roadwork">Roadwork / Construction</option>
-        <option value="VIP Movement">VIP Movement</option>
-        <option value="Protest">Protest / Gathering</option>
+        <option value="Planned">Planned</option>
+        <option value="Unplanned" selected>Unplanned</option>
       </select>
     </div>
 
@@ -284,7 +292,7 @@ header{
       </div>
     </div>
     <p style="font-size:11px;color:var(--muted);margin-top:-10px">
-      💡 Click on the map to set coordinates automatically
+      💡 Click on the map to set coordinates — Bengaluru metro area only
     </p>
 
     <div class="field">
@@ -295,6 +303,11 @@ header{
     <button class="submit-btn" id="submitBtn" onclick="runPrediction()">
       <div class="spinner"></div>
       <span class="btn-text">⚡ Run Cognitive Analysis</span>
+    </button>
+
+    <button class="submit-btn secondary-btn" id="liveBtn" onclick="runLiveFeedSimulation()" style="margin-top:8px">
+      <div class="spinner"></div>
+      <span class="btn-text">📡 Simulate Live Telemetry Feed</span>
     </button>
 
     <div style="border-top:1px solid var(--border);padding-top:16px">
@@ -325,13 +338,44 @@ header{
 </div>
 
 <script>
-const API_URL = window.location.origin + "/api/v8/cognitive_grid";
+const API_URL = "https://astram-1.onrender.com/api/dashboard/predict";
+const LIVE_FEED_URL = "https://astram-1.onrender.com/api/dashboard/live-feed";
 
-const map = L.map('map', { zoomControl: true }).setView([12.9716, 77.5946], 12);
+// Bengaluru metropolitan bounds (SW → NE)
+const BANGALORE_BOUNDS = L.latLngBounds([12.75, 77.42], [13.20, 77.82]);
+const BANGALORE_CENTER = [12.9716, 77.5946];
+
+function clampToBangalore(lat, lng) {
+  const sw = BANGALORE_BOUNDS.getSouthWest();
+  const ne = BANGALORE_BOUNDS.getNorthEast();
+  return [
+    Math.min(Math.max(lat, sw.lat), ne.lat),
+    Math.min(Math.max(lng, sw.lng), ne.lng)
+  ];
+}
+
+const map = L.map('map', {
+  zoomControl: true,
+  maxBounds: BANGALORE_BOUNDS,
+  maxBoundsViscosity: 1.0,
+  minZoom: 11,
+  maxZoom: 18
+}).fitBounds(BANGALORE_BOUNDS);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution: '© OpenStreetMap contributors © CARTO',
-  maxZoom: 18
+  minZoom: 11,
+  maxZoom: 18,
+  bounds: BANGALORE_BOUNDS
+}).addTo(map);
+
+L.rectangle(BANGALORE_BOUNDS, {
+  color: '#0FF4C6',
+  weight: 1,
+  opacity: 0.35,
+  fill: false,
+  dashArray: '6, 8',
+  interactive: false
 }).addTo(map);
 
 const incidentIcon = L.divIcon({
@@ -351,10 +395,12 @@ const incidentIcon = L.divIcon({
   iconAnchor: [30, 30]
 });
 
-let marker = L.marker([12.9716, 77.5946], { icon: incidentIcon }).addTo(map);
+let marker = L.marker(BANGALORE_CENTER, { icon: incidentIcon }).addTo(map);
+let dispatchMarker = null;
+let routeLine = null;
 
 map.on('click', function(e) {
-  const { lat, lng } = e.latlng;
+  const [lat, lng] = clampToBangalore(e.latlng.lat, e.latlng.lng);
   document.getElementById('latitude').value = lat.toFixed(4);
   document.getElementById('longitude').value = lng.toFixed(4);
   marker.setLatLng([lat, lng]);
@@ -365,30 +411,33 @@ map.on('click', function(e) {
     const lat = parseFloat(document.getElementById('latitude').value);
     const lng = parseFloat(document.getElementById('longitude').value);
     if (!isNaN(lat) && !isNaN(lng)) {
-      marker.setLatLng([lat, lng]);
-      map.panTo([lat, lng]);
+      const [clat, clng] = clampToBangalore(lat, lng);
+      document.getElementById('latitude').value = clat.toFixed(4);
+      document.getElementById('longitude').value = clng.toFixed(4);
+      marker.setLatLng([clat, clng]);
+      map.panTo([clat, clng]);
     }
   });
 });
 
 const presets = {
   fatal: {
-    event_type: 'Accident', event_cause: 'Accident', veh_type: 'Truck',
+    event_type: 'Unplanned', event_cause: 'Accident', veh_type: 'Truck',
     latitude: 12.9352, longitude: 77.6245,
     description: 'Fatal crash on Outer Ring Road near Silk Board junction. Truck overturned blocking all 3 lanes, multiple injuries, ambulance needed urgently.'
   },
   flood: {
-    event_type: 'Flood', event_cause: 'Flood', veh_type: 'Car',
+    event_type: 'Unplanned', event_cause: 'Flood', veh_type: 'Car',
     latitude: 12.9698, longitude: 77.7499,
     description: 'Heavy flooding on Sarjapur Road, water level knee-deep. Multiple vehicles stalled. Road completely inaccessible. Immediate civic intervention required.'
   },
   fire: {
-    event_type: 'Fire', event_cause: 'Fire', veh_type: 'Truck',
+    event_type: 'Unplanned', event_cause: 'Fire', veh_type: 'Truck',
     latitude: 12.9719, longitude: 77.5937,
     description: 'Chemical spill and fire on industrial vehicle near Peenya Industrial Area. Hazmat risk, chemical smoke spreading. Evacuate 500m radius.'
   },
   breakdown: {
-    event_type: 'Breakdown', event_cause: 'Breakdown', veh_type: 'Bus',
+    event_type: 'Unplanned', event_cause: 'Breakdown', veh_type: 'Bus',
     latitude: 13.0199, longitude: 77.5956,
     description: 'BMTC bus broken down near Hebbal flyover, blocking left lane. Minor traffic jam building. Assistance required.'
   }
@@ -396,14 +445,15 @@ const presets = {
 
 function loadPreset(key) {
   const p = presets[key];
+  const [lat, lng] = clampToBangalore(p.latitude, p.longitude);
   document.getElementById('event_type').value = p.event_type;
   document.getElementById('event_cause').value = p.event_cause;
   document.getElementById('veh_type').value = p.veh_type;
-  document.getElementById('latitude').value = p.latitude;
-  document.getElementById('longitude').value = p.longitude;
+  document.getElementById('latitude').value = lat.toFixed(4);
+  document.getElementById('longitude').value = lng.toFixed(4);
   document.getElementById('description').value = p.description;
-  marker.setLatLng([p.latitude, p.longitude]);
-  map.panTo([p.latitude, p.longitude]);
+  marker.setLatLng([lat, lng]);
+  map.panTo([lat, lng]);
 }
 
 async function runPrediction() {
@@ -440,17 +490,79 @@ async function runPrediction() {
   }
 }
 
+async function runLiveFeedSimulation() {
+  const btn = document.getElementById('liveBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  submitBtn.disabled = true;
+  btn.classList.add('btn-loading');
+
+  try {
+    const res = await fetch(LIVE_FEED_URL);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    
+    // Populate the form fields with simulated incident data
+    const input = data.input_data;
+    if (input) {
+      const [lat, lng] = clampToBangalore(input.latitude, input.longitude);
+      document.getElementById('event_type').value = input.event_type || 'Unplanned';
+      document.getElementById('event_cause').value = input.event_cause || 'Accident';
+      document.getElementById('veh_type').value = input.veh_type || 'Car';
+      document.getElementById('latitude').value = lat.toFixed(4);
+      document.getElementById('longitude').value = lng.toFixed(4);
+      document.getElementById('description').value = input.description || '';
+      
+      // Update map marker and pan to coordinates
+      marker.setLatLng([lat, lng]);
+      map.panTo([lat, lng]);
+    }
+    
+    renderResults(data);
+  } catch (e) {
+    renderError(e.message);
+  } finally {
+    btn.disabled = false;
+    submitBtn.disabled = false;
+    btn.classList.remove('btn-loading');
+  }
+}
+
 function renderResults(data, input) {
   document.getElementById('placeholder').style.display = 'none';
-  const bf = data.bayesian_forecast;
-  const llm = data.llm_reasoning_engine;
-  const rl = data.rl_agentic_deployment;
 
-  const sev = bf.mean_impact_score;
+  // Safeguard against missing/malformed response structures
+  const bf = data.bayesian_forecast || {};
+  const llm = data.llm_reasoning_engine || {};
+  const rl = data.rl_agentic_deployment || {};
+
+  // Extract values with robust defaults to prevent undefined crashes
+  const sev = typeof bf.mean_impact_score === 'number' ? bf.mean_impact_score : 0;
+  const duration = typeof bf.mean_duration_mins === 'number' ? bf.mean_duration_mins : 0;
+  const confidence = bf.confidence_interval || '± 0.0 Log-Mins (95% CI)';
+  const epistemic = typeof bf.epistemic_uncertainty === 'number' ? bf.epistemic_uncertainty : 0;
+  
+  const roadClosure = !!bf.ai_predicted_road_closure;
+  const forcedClosure = !!llm.force_road_closure;
+  const hazmatRisk = !!llm.hazmat_risk;
+
+  const priority = llm.inferred_priority || 'Low';
+  const urgency = typeof llm.sentiment_vector === 'number' ? llm.sentiment_vector : 1.0;
+
+  const dispatchNode = rl.dispatch_node || 'Allocating…';
+  const officers = typeof rl.officers_assigned === 'number' ? rl.officers_assigned : (rl.officers_assigned || 0);
+  const barricadesCount = typeof rl.barricades === 'number' ? rl.barricades : (rl.barricades || 0);
+  const specialUnits = rl.special_units || 'Standard Units';
+
+  // Determine css classes for priority and impact
   const sevClass = sev >= 65 ? 'critical' : sev >= 35 ? 'warning' : 'ok';
   const sevColor = sev >= 65 ? 'red' : sev >= 35 ? 'amber' : '';
-  const priorityBadgeClass = llm.inferred_priority === 'High' ? 'critical' : llm.inferred_priority === 'Medium' ? 'medium' : 'low';
+  const priorityBadgeClass = priority === 'High' ? 'critical' : priority === 'Medium' ? 'medium' : 'low';
 
+  // SOP mappings
   const sopMap = {
     'HAZMAT_PROTOCOL': { icon: '☢️', label: 'HAZMAT Protocol Active', sub: 'Chemical/fire risk detected — specialist units dispatched', cls: 'hazmat' },
     'CODE_RED_MEDICAL': { icon: '🚨', label: 'Code Red — Medical Emergency', sub: 'Fatal or serious injury event — emergency services alerted', cls: 'code-red' },
@@ -459,8 +571,56 @@ function renderResults(data, input) {
   };
   const sop = sopMap[llm.sop_flag] || sopMap['Standard'];
 
-  const uncertainty = Math.min(100, Math.round(bf.epistemic_uncertainty * 100));
+  const uncertainty = Math.min(100, Math.round(epistemic * 100));
 
+  // 1. MAP ROUTE VISUALIZATION (Leaflet)
+  const lat = parseFloat(document.getElementById('latitude').value) || 12.9716;
+  const lng = parseFloat(document.getElementById('longitude').value) || 77.5946;
+
+  // Clear previous dispatch marker and route line
+  if (dispatchMarker) map.removeLayer(dispatchMarker);
+  if (routeLine) map.removeLayer(routeLine);
+
+  // If there's a dispatch node, draw it on the map and connect with a line
+  if (rl.dispatch_node && rl.dispatch_node !== 'Allocating…') {
+    const nodeName = rl.dispatch_node;
+    let hash = 0;
+    for (let i = 0; i < nodeName.length; i++) {
+      hash = nodeName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Offset dispatch station by a deterministic 1-2 km for visual appeal
+    const offsetLat = ((Math.abs(hash) % 100) / 4000) - 0.012;
+    const offsetLng = (((Math.abs(hash) >> 8) % 100) / 4000) - 0.012;
+    const dispatchLat = lat + offsetLat;
+    const dispatchLng = lng + offsetLng;
+
+    const dispatchIconSvg = L.divIcon({
+      className: '',
+      html: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+        <circle cx="20" cy="20" r="10" fill="#0A0E1A" stroke="#0FF4C6" stroke-width="2"/>
+        <circle cx="20" cy="20" r="5" fill="#0FF4C6"/>
+      </svg>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+
+    dispatchMarker = L.marker([dispatchLat, dispatchLng], { icon: dispatchIconSvg }).addTo(map)
+      .bindPopup(`<b>Dispatch Station:</b> ${rl.dispatch_node}`);
+
+    routeLine = L.polyline([[dispatchLat, dispatchLng], [lat, lng]], {
+      color: '#0FF4C6',
+      weight: 3,
+      dashArray: '6, 10',
+      opacity: 0.85
+    }).addTo(map);
+
+    // Zoom and fit bounds to show both the dispatch node and the incident location
+    const bounds = L.latLngBounds([[lat, lng], [dispatchLat, dispatchLng]]);
+    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+  }
+
+  // 2. RENDER THE RESULTS PANEL HTML
   const html = `
     <div class="panel-label enter-animation" style="animation-delay:.0s">Bayesian Forecast</div>
 
@@ -469,25 +629,25 @@ function renderResults(data, input) {
         <div class="card-label">Impact Score</div>
         <div class="card-value ${sevColor}">${sev.toFixed(1)}</div>
         <div class="card-unit">/ 100 severity</div>
-        <span class="badge ${priorityBadgeClass}">${llm.inferred_priority} Priority</span>
+        <span class="badge ${priorityBadgeClass}">${priority} Priority</span>
       </div>
 
       <div class="result-card enter-animation" style="animation-delay:.1s">
         <div class="card-label">Est. Duration</div>
-        <div class="card-value">${Math.round(bf.mean_duration_mins)}</div>
+        <div class="card-value">${Math.round(duration)}</div>
         <div class="card-unit">minutes</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono)">${bf.confidence_interval}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono)">${confidence}</div>
       </div>
 
       <div class="result-card enter-animation" style="animation-delay:.15s">
         <div class="card-label">Road Closure</div>
-        <div class="card-value med ${bf.ai_predicted_road_closure ? 'red' : ''}">${bf.ai_predicted_road_closure ? '⛔ REQUIRED' : '✅ NOT NEEDED'}</div>
-        <div class="card-unit" style="margin-top:8px">${bf.ai_predicted_road_closure ? 'Barricades: ' + rl.barricades + ' units' : 'Traffic flow manageable'}</div>
+        <div class="card-value med ${(roadClosure || forcedClosure) ? 'red' : ''}">${(roadClosure || forcedClosure) ? '⛔ REQUIRED' : '✅ NOT NEEDED'}</div>
+        <div class="card-unit" style="margin-top:8px">${(roadClosure || forcedClosure) ? 'Barricades: ' + barricadesCount + ' units' : 'Traffic flow manageable'}</div>
       </div>
 
       <div class="result-card enter-animation" style="animation-delay:.2s">
         <div class="card-label">Model Uncertainty</div>
-        <div class="card-value med" style="color:var(--amber)">${bf.epistemic_uncertainty.toFixed(3)} σ</div>
+        <div class="card-value med" style="color:var(--amber)">${epistemic.toFixed(4)} σ</div>
         <div class="uncert-bar"><div class="uncert-fill" style="width:${uncertainty}%"></div></div>
         <div class="card-unit" style="margin-top:6px">${uncertainty < 30 ? 'High confidence' : uncertainty < 60 ? 'Moderate confidence' : 'Low confidence'}</div>
       </div>
@@ -503,28 +663,39 @@ function renderResults(data, input) {
       </div>
     </div>
 
+    <div class="deploy-card enter-animation" style="animation-delay:.32s; margin-top: 8px;">
+      <div class="deploy-row">
+        <span class="deploy-key">Public Urgency Factor</span>
+        <span class="deploy-val amber">${urgency.toFixed(1)}x multiplier</span>
+      </div>
+      <div class="deploy-row">
+        <span class="deploy-key">SOP Override Status</span>
+        <span class="deploy-val ${forcedClosure ? 'red' : 'teal'}">${forcedClosure ? '⚠️ FORCE ROAD CLOSURE ACTIVE' : 'Normal Operations'}</span>
+      </div>
+    </div>
+
     <div class="panel-label enter-animation" style="animation-delay:.35s;margin-top:4px">Resource Deployment</div>
 
     <div class="deploy-card enter-animation" style="animation-delay:.4s">
       <div class="deploy-row">
         <span class="deploy-key">Dispatch Node</span>
-        <span class="deploy-val teal">${rl.dispatch_node || 'Allocating…'}</span>
+        <span class="deploy-val teal">${dispatchNode}</span>
       </div>
       <div class="deploy-row">
         <span class="deploy-key">Officers Assigned</span>
-        <span class="deploy-val teal">${rl.officers_assigned} units</span>
+        <span class="deploy-val teal">${officers} units</span>
       </div>
       <div class="deploy-row">
         <span class="deploy-key">Barricades</span>
-        <span class="deploy-val">${rl.barricades} units</span>
+        <span class="deploy-val">${barricadesCount} units</span>
       </div>
       <div class="deploy-row">
         <span class="deploy-key">Special Units</span>
-        <span class="deploy-val ${rl.special_units.includes('Hazmat') ? 'red' : 'teal'}">${rl.special_units}</span>
+        <span class="deploy-val ${specialUnits.toLowerCase().includes('hazmat') ? 'red' : 'teal'}">${specialUnits}</span>
       </div>
       <div class="deploy-row">
         <span class="deploy-key">Hazmat Risk</span>
-        <span class="deploy-val ${llm.hazmat_risk ? 'red' : ''}">${llm.hazmat_risk ? '⚠️ CONFIRMED' : 'None detected'}</span>
+        <span class="deploy-val ${hazmatRisk ? 'red' : ''}">${hazmatRisk ? '⚠️ CONFIRMED' : 'None detected'}</span>
       </div>
     </div>
   `;
