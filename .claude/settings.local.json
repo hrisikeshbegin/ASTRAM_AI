@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:8000/api/v8/cognitive_grid\" -Method POST -ContentType \"application/json\" -Body '{\"event_type\":\"Unplanned\",\"event_cause\":\"Accident\",\"latitude\":12.9352,\"longitude\":77.6245,\"veh_type\":\"Truck\",\"description\":\"Fatal crash on Outer Ring Road near Silk Board junction. Truck overturned blocking all 3 lanes, multiple injuries, ambulance needed urgently.\"}')"
+    ]
+  }
+}

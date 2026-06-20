@@ -338,8 +338,7 @@ header{
 </div>
 
 <script>
-const API_URL = "https://astram-1.onrender.com/api/dashboard/predict";
-const LIVE_FEED_URL = "https://astram-1.onrender.com/api/dashboard/live-feed";
+const API_URL = window.location.origin + "/api/v8/cognitive_grid";
 
 // Bengaluru metropolitan bounds (SW → NE)
 const BANGALORE_BOUNDS = L.latLngBounds([12.75, 77.42], [13.20, 77.82]);
@@ -497,30 +496,38 @@ async function runLiveFeedSimulation() {
   submitBtn.disabled = true;
   btn.classList.add('btn-loading');
 
+  const keys = Object.keys(presets);
+  const p = presets[keys[Math.floor(Math.random() * keys.length)]];
+  const [lat, lng] = clampToBangalore(p.latitude, p.longitude);
+  document.getElementById('event_type').value = p.event_type;
+  document.getElementById('event_cause').value = p.event_cause;
+  document.getElementById('veh_type').value = p.veh_type;
+  document.getElementById('latitude').value = lat.toFixed(4);
+  document.getElementById('longitude').value = lng.toFixed(4);
+  document.getElementById('description').value = p.description;
+  marker.setLatLng([lat, lng]);
+  map.panTo([lat, lng]);
+
+  const body = {
+    event_type: p.event_type,
+    event_cause: p.event_cause,
+    latitude: lat,
+    longitude: lng,
+    veh_type: p.veh_type,
+    description: p.description
+  };
+
   try {
-    const res = await fetch(LIVE_FEED_URL);
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || `HTTP ${res.status}`);
     }
     const data = await res.json();
-    
-    // Populate the form fields with simulated incident data
-    const input = data.input_data;
-    if (input) {
-      const [lat, lng] = clampToBangalore(input.latitude, input.longitude);
-      document.getElementById('event_type').value = input.event_type || 'Unplanned';
-      document.getElementById('event_cause').value = input.event_cause || 'Accident';
-      document.getElementById('veh_type').value = input.veh_type || 'Car';
-      document.getElementById('latitude').value = lat.toFixed(4);
-      document.getElementById('longitude').value = lng.toFixed(4);
-      document.getElementById('description').value = input.description || '';
-      
-      // Update map marker and pan to coordinates
-      marker.setLatLng([lat, lng]);
-      map.panTo([lat, lng]);
-    }
-    
     renderResults(data);
   } catch (e) {
     renderError(e.message);
