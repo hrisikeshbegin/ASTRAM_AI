@@ -338,7 +338,8 @@ header{
 </div>
 
 <script>
-const API_URL = window.location.origin + "/api/v8/cognitive_grid";
+const API_URL = "https://astram-1.onrender.com/api/dashboard/predict";
+const LIVE_FEED_URL = "https://astram-1.onrender.com/api/dashboard/live-feed";
 
 // Bengaluru metropolitan bounds (SW → NE)
 const BANGALORE_BOUNDS = L.latLngBounds([12.75, 77.42], [13.20, 77.82]);
@@ -518,10 +519,8 @@ async function runLiveFeedSimulation() {
   };
 
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+    const res = await fetch(LIVE_FEED_URL, {
+      method: 'GET'
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
