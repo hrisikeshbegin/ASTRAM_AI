@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import datetime
+import json
+import uuid
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -32,6 +35,9 @@ async def serve_frontend():
 random.seed(42)
 GLOBAL_STATIONS = [f"BLR_Node_{str(i).zfill(4)}" for i in range(1, 1001)]
 BASE_COSTS = {station: random.randint(50, 300) for station in GLOBAL_STATIONS}
+
+FEEDBACK_LOG_PATH = "feedback_log.jsonl"
+PREDICTION_CACHE = {}
 
 try:
     preprocessors = joblib.load("preprocessors.pkl")
@@ -134,18 +140,93 @@ class AgenticLLMNode:
             "inferred_priority": "Low",
             "force_road_closure": False
         }
-        if "fire" in text or "spill" in text or "chemical" in text or "hazmat" in text:
-            context.update({"sop_flag": "HAZMAT_PROTOCOL", "hazmat_risk": True, "sentiment_vector": 2.5, "inferred_priority": "High", "force_road_closure": True})
-        elif "fatal" in text or "crash" in text or "injur" in text or "accident" in text:
-            context.update({"sop_flag": "CODE_RED_MEDICAL", "sentiment_vector": 3.0, "inferred_priority": "High", "force_road_closure": True})
-        elif "water" in text or "flood" in text or "heavy" in text:
-            context.update({"sop_flag": "CIVIC_INFRA_ALERT", "sentiment_vector": 1.5, "inferred_priority": "High", "force_road_closure": True})
-        elif "block" in text or "stuck" in text or "jam" in text:
-            context.update({"inferred_priority": "Medium", "sentiment_vector": 1.2})
+
+        hazmat_terms = ["fire", "spill", "chemical", "hazmat", "smoke", "explosion", "gas leak", "toxic", "burning", "flammable"]
+        medical_terms = ["fatal", "injur", "casualt", "death", "dead body", "trapped", "overturn", "rollover", "head-on", "head on", "unconscious", "bleeding", "ambulance", "hit and run", "hit-and-run", "run over", "pedestrian hit", "serious accident", "major accident", "bad accident"]
+        flood_terms = ["water", "flood", "heavy rain", "waterlog", "submerged", "drowning", "inundat", "overflow"]
+        crowd_terms = ["procession", "protest", "rally", "gathering", "crowd", "march", "vip", "convoy", "festival", "agitation"]
+        congestion_terms = ["block", "stuck", "jam", "standstill", "gridlock", "bottleneck", "stalled", "breakdown", "obstruct", "diversion", "accident", "crash", "collision", "fender bender", "minor accident", "vehicle hit"]
+
+        def hit(terms):
+            return any(term in text for term in terms)
+
+        if hit(hazmat_terms):
+            context.update({
+                "sop_flag": "HAZMAT_PROTOCOL",
+                "hazmat_risk": True,
+                "sentiment_vector": 2.5,
+                "inferred_priority": "High",
+                "force_road_closure": True
+            })
+        elif hit(medical_terms):
+            context.update({
+                "sop_flag": "CODE_RED_MEDICAL",
+                "sentiment_vector": 3.0,
+                "inferred_priority": "High",
+                "force_road_closure": True
+            })
+        elif hit(flood_terms):
+            context.update({
+                "sop_flag": "CIVIC_INFRA_ALERT",
+                "sentiment_vector": 1.8,
+                "inferred_priority": "High",
+                "force_road_closure": True
+            })
+        elif hit(crowd_terms):
+            context.update({
+                "sop_flag": "CROWD_CONTROL_ALERT",
+                "sentiment_vector": 1.6,
+                "inferred_priority": "High",
+                "force_road_closure": True
+            })
+        elif hit(congestion_terms):
+            context.update({
+                "sop_flag": "TRAFFIC_MANAGEMENT",
+                "inferred_priority": "Medium",
+                "sentiment_vector": 1.3
+            })
+
+        severity_boosters = ["multiple", "several", "many", "all lanes", "fully blocked", "completely", "major", "severe", "critical", "highway", "flyover"]
+        boost_count = sum(1 for term in severity_boosters if term in text)
+        if boost_count > 0:
+            context["sentiment_vector"] = min(3.0, context["sentiment_vector"] + (boost_count * 0.2))
+            if context["inferred_priority"] == "Medium" and boost_count >= 2:
+                context["inferred_priority"] = "High"
+                context["force_road_closure"] = True
+
         return context
 
 
 llm_node = AgenticLLMNode()
+
+
+def compute_personnel_breakdown(sop_flag: str, total_officers: int):
+    if total_officers <= 0:
+        return {"traffic_police": 0, "medical_staff": 0, "hazmat_specialists": 0, "civic_workers": 0, "crowd_control": 0}
+
+    if sop_flag == "HAZMAT_PROTOCOL":
+        ratios = {"traffic_police": 0.4, "hazmat_specialists": 0.35, "medical_staff": 0.25}
+    elif sop_flag == "CODE_RED_MEDICAL":
+        ratios = {"traffic_police": 0.5, "medical_staff": 0.5}
+    elif sop_flag == "CIVIC_INFRA_ALERT":
+        ratios = {"traffic_police": 0.55, "civic_workers": 0.45}
+    elif sop_flag == "CROWD_CONTROL_ALERT":
+        ratios = {"traffic_police": 0.6, "crowd_control": 0.4}
+    else:
+        ratios = {"traffic_police": 1.0}
+
+    breakdown = {"traffic_police": 0, "medical_staff": 0, "hazmat_specialists": 0, "civic_workers": 0, "crowd_control": 0}
+    allocated = 0
+    keys = list(ratios.keys())
+    for i, role in enumerate(keys):
+        if i == len(keys) - 1:
+            count = total_officers - allocated
+        else:
+            count = max(1, round(total_officers * ratios[role]))
+            allocated += count
+        breakdown[role] = count
+
+    return breakdown
 
 
 class TrafficEventInput(BaseModel):
@@ -166,9 +247,16 @@ class BayesianPrediction(BaseModel):
 
 
 class PredictionResponse(BaseModel):
+    prediction_id: str
     bayesian_forecast: BayesianPrediction
     llm_reasoning_engine: dict
     rl_agentic_deployment: dict
+
+
+class FeedbackInput(BaseModel):
+    prediction_id: str
+    was_accurate: bool
+    notes: str = ""
 
 
 @app.post("/api/v8/cognitive_grid", response_model=PredictionResponse)
@@ -216,7 +304,17 @@ async def predict_event(event: TrafficEventInput):
             if llm_ctx["force_road_closure"]:
                 predicted_closure = True
 
-        final_sev = min(100.0, base_sev * llm_ctx["sentiment_vector"])
+        category_severity_floor = {
+            "HAZMAT_PROTOCOL": 75,
+            "CODE_RED_MEDICAL": 80,
+            "CIVIC_INFRA_ALERT": 60,
+            "CROWD_CONTROL_ALERT": 55,
+            "TRAFFIC_MANAGEMENT": 35,
+            "Standard": 15
+        }
+        nn_adjustment = (base_sev - 50) * 0.3
+        severity_floor = category_severity_floor.get(llm_ctx["sop_flag"], 15)
+        final_sev = max(5.0, min(100.0, severity_floor + nn_adjustment))
         final_dur = max(5.0, base_dur + (final_sev * 0.3))
 
         prob = LpProblem("City_Wide_RL_Optimizer", LpMinimize)
@@ -251,7 +349,12 @@ async def predict_event(event: TrafficEventInput):
         if len(active_dispatchers) > 2:
             primary_dispatch += f" + {len(active_dispatchers) - 2} other nodes"
 
-        return {
+        personnel_breakdown = compute_personnel_breakdown(llm_ctx["sop_flag"], int(deployed))
+
+        prediction_id = str(uuid.uuid4())[:8]
+
+        response = {
+            "prediction_id": prediction_id,
             "bayesian_forecast": {
                 "mean_impact_score": round(final_sev, 2),
                 "mean_duration_mins": round(final_dur, 1),
@@ -263,10 +366,59 @@ async def predict_event(event: TrafficEventInput):
             "rl_agentic_deployment": {
                 "dispatch_node": primary_dispatch,
                 "officers_assigned": int(deployed),
+                "personnel_breakdown": personnel_breakdown,
                 "barricades": 20 if predicted_closure else int(final_sev / 20),
                 "special_units": "Hazmat Team" if llm_ctx["hazmat_risk"] else "Standard Units"
             }
         }
 
+        PREDICTION_CACHE[prediction_id] = {
+            "input": event.dict(),
+            "output": response
+        }
+
+        return response
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v8/feedback")
+async def submit_feedback(feedback: FeedbackInput):
+    record = PREDICTION_CACHE.get(feedback.prediction_id)
+    log_entry = {
+        "prediction_id": feedback.prediction_id,
+        "was_accurate": feedback.was_accurate,
+        "notes": feedback.notes,
+        "logged_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "prediction_snapshot": record
+    }
+    try:
+        with open(FEEDBACK_LOG_PATH, "a") as f:
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not save feedback: {e}")
+    return {"status": "saved", "prediction_id": feedback.prediction_id}
+
+
+@app.get("/api/v8/feedback/stats")
+async def feedback_stats():
+    if not os.path.exists(FEEDBACK_LOG_PATH):
+        return {"total": 0, "accurate": 0, "inaccurate": 0, "accuracy_rate": None}
+    total = 0
+    accurate = 0
+    with open(FEEDBACK_LOG_PATH, "r") as f:
+        for line in f:
+            try:
+                entry = json.loads(line)
+                total += 1
+                if entry.get("was_accurate"):
+                    accurate += 1
+            except Exception:
+                continue
+    return {
+        "total": total,
+        "accurate": accurate,
+        "inaccurate": total - accurate,
+        "accuracy_rate": round(accurate / total, 3) if total > 0 else None
+    }

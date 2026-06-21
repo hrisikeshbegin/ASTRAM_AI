@@ -161,6 +161,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 pos_weight = torch.tensor([(df['closure_label'] == 0).sum() / max(1, (df['closure_label'] == 1).sum())], dtype=torch.float32)
 closure_loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 severity_loss_fn = nn.MSELoss()
+SEVERITY_LOSS_WEIGHT = 1.5
 
 print("Training...")
 for epoch in range(EPOCHS):
@@ -169,9 +170,9 @@ for epoch in range(EPOCHS):
     for cat, spatial, time, bool_f, text, sev, clos in train_loader:
         optimizer.zero_grad()
         sev_pred, mu, sigma, clos_logits = model(cat, spatial, time, bool_f, text)
-        loss_sev = severity_loss_fn(sev_pred.squeeze(), sev)
+        loss_sev = severity_loss_fn(sev_pred.squeeze() / 100.0, sev / 100.0)
         loss_clos = closure_loss_fn(clos_logits.squeeze(), clos)
-        loss = loss_sev * 0.01 + loss_clos
+        loss = loss_sev * SEVERITY_LOSS_WEIGHT + loss_clos
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
@@ -179,14 +180,17 @@ for epoch in range(EPOCHS):
     model.eval()
     correct_clos = 0
     total = 0
+    sev_errors = []
     with torch.no_grad():
         for cat, spatial, time, bool_f, text, sev, clos in val_loader:
             sev_pred, mu, sigma, clos_logits = model(cat, spatial, time, bool_f, text)
             clos_pred = (torch.sigmoid(clos_logits.squeeze()) > 0.5).float()
             correct_clos += (clos_pred == clos).sum().item()
             total += len(clos)
+            sev_errors.append((sev_pred.squeeze() - sev).abs().mean().item())
     acc = correct_clos / total
-    print(f"Epoch {epoch+1}/{EPOCHS}  train_loss={train_loss/len(train_loader):.4f}  val_closure_acc={acc:.3f}")
+    mae = sum(sev_errors) / len(sev_errors)
+    print(f"Epoch {epoch+1}/{EPOCHS}  train_loss={train_loss/len(train_loader):.4f}  val_closure_acc={acc:.3f}  val_severity_mae={mae:.2f}")
 
 print("Saving model and preprocessors...")
 preprocessors = {
