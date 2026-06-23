@@ -1,735 +1,1466 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ASTRAM-AI · Cognitive Grid</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0A0E1A;
-  --surface:#111827;
-  --card:#1A2236;
-  --border:#1E3050;
-  --teal:#0FF4C6;
-  --teal-dim:#0BB894;
-  --red:#FF4D4D;
-  --amber:#FFB347;
-  --text:#E8F0FE;
-  --muted:#8BA5C8;
-  --mono:'Share Tech Mono',monospace;
-  --sans:'Inter',sans-serif;
-}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASTRAM-AI · Cognitive Grid</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+        :root {
+            --bg: #0A0E1A;
+            --surface: #111827;
+            --card: #1A2236;
+            --border: #1E3050;
+            --teal: #0FF4C6;
+            --teal-dim: #0BB894;
+            --red: #FF4D4D;
+            --amber: #FFB347;
+            --text: #E8F0FE;
+            --muted: #8BA5C8;
+            --mono: 'Share Tech Mono', monospace;
+            --sans: 'Inter', sans-serif;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            overflow-x: hidden
+        }
 
-/* Header */
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 28px;
-  background:rgba(10,14,26,0.95);
-  border-bottom:1px solid var(--border);
-  position:sticky;top:0;z-index:999;
-  backdrop-filter:blur(10px);
-}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-mark{
-  width:32px;height:32px;border-radius:6px;
-  background:linear-gradient(135deg,#0FF4C6 0%,#0A8A70 100%);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:13px;font-weight:700;color:#0A0E1A;
-}
-.logo-name{font-family:var(--mono);font-size:15px;color:var(--teal);letter-spacing:2px}
-.logo-ver{font-size:11px;color:var(--muted);margin-left:8px;font-family:var(--mono)}
-.status-dot{
-  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-family:var(--mono)
-}
-.dot{
-  width:8px;height:8px;border-radius:50%;background:var(--teal);
-  box-shadow:0 0 8px var(--teal);
-  animation:pulse-dot 2s ease-in-out infinite;
-}
-@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 6px var(--teal)}50%{opacity:.6;box-shadow:0 0 14px var(--teal)}}
+        /* Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 28px;
+            background: rgba(10, 14, 26, 0.95);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #0FF4C6 0%, #0A8A70 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: #0A0E1A;
+        }
+        .logo-name {
+            font-family: var(--mono);
+            font-size: 15px;
+            color: var(--teal);
+            letter-spacing: 2px
+        }
+        .logo-ver {
+            font-size: 11px;
+            color: var(--muted);
+            margin-left: 8px;
+            font-family: var(--mono)
+        }
+        .status-dot {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            font-family: var(--mono)
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 8px var(--teal);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 6px var(--teal)
+            }
+            50% {
+                opacity: .6;
+                box-shadow: 0 0 14px var(--teal)
+            }
+        }
 
-/* Layout */
-.layout{display:grid;grid-template-columns:420px 1fr;gap:0;height:calc(100vh - 57px)}
+        /* Layout */
+        .layout {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 0;
+            height: calc(100vh - 57px)
+        }
 
-/* Form panel */
-.form-panel{
-  background:var(--surface);border-right:1px solid var(--border);
-  overflow-y:auto;padding:24px;
-  display:flex;flex-direction:column;gap:20px;
-}
-.panel-label{
-  font-family:var(--mono);font-size:10px;letter-spacing:3px;
-  color:var(--teal);text-transform:uppercase;margin-bottom:4px;
-}
-.section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px}
+        /* Form panel */
+        .form-panel {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .panel-label {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--teal);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 14px
+        }
 
-.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.field label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
-.field input,.field select,.field textarea{
-  background:var(--card);border:1px solid var(--border);
-  color:var(--text);border-radius:8px;padding:10px 13px;
-  font-family:var(--sans);font-size:13px;
-  outline:none;transition:border-color .2s,box-shadow .2s;
-  width:100%;
-}
-.field input:focus,.field select:focus,.field textarea:focus{
-  border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,244,198,.1);
-}
-.field select option{background:var(--card)}
-.field textarea{resize:vertical;min-height:80px}
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px
+        }
+        .field label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--muted);
+            letter-spacing: .5px;
+            text-transform: uppercase
+        }
+        .field input,
+        .field select,
+        .field textarea {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 10px 13px;
+            font-family: var(--sans);
+            font-size: 13px;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            width: 100%;
+        }
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(15, 244, 198, .1);
+        }
+        .field select option {
+            background: var(--card)
+        }
+        .field textarea {
+            resize: vertical;
+            min-height: 80px
+        }
 
-.coord-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .coord-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
 
-.submit-btn{
-  background:var(--teal);color:#0A0E1A;
-  border:none;border-radius:10px;
-  padding:13px 20px;font-size:14px;font-weight:600;
-  font-family:var(--sans);cursor:pointer;width:100%;
-  transition:background .2s,transform .1s,box-shadow .2s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  letter-spacing:.3px;
-}
-.submit-btn:hover{background:var(--teal-dim);box-shadow:0 0 20px rgba(15,244,198,.3)}
-.submit-btn:active{transform:scale(.98)}
-.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.submit-btn.secondary-btn{
-  background:transparent;
-  border:1px solid var(--border);
-  color:var(--teal);
-}
-.submit-btn.secondary-btn:hover{
-  background:rgba(15,244,198,0.08);
-  border-color:var(--teal);
-  box-shadow:0 0 20px rgba(15,244,198,0.15);
-}
-.submit-btn.secondary-btn .spinner{
-  border-top-color:var(--teal);
-}
-.spinner{
-  width:16px;height:16px;border:2px solid rgba(0,0,0,.3);border-top-color:#0A0E1A;
-  border-radius:50%;animation:spin .7s linear infinite;display:none;
-}
-.btn-loading .spinner{display:block}
-.btn-loading .btn-text{display:none}
-@keyframes spin{to{transform:rotate(360deg)}}
+        .submit-btn {
+            background: var(--teal);
+            color: #0A0E1A;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--sans);
+            cursor: pointer;
+            width: 100%;
+            transition: background .2s, transform .1s, box-shadow .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            letter-spacing: .3px;
+        }
+        .submit-btn:hover {
+            background: var(--teal-dim);
+            box-shadow: 0 0 20px rgba(15, 244, 198, .3)
+        }
+        .submit-btn:active {
+            transform: scale(.98)
+        }
+        .submit-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none
+        }
+        .submit-btn.secondary-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--teal);
+        }
+        .submit-btn.secondary-btn:hover {
+            background: rgba(15, 244, 198, 0.08);
+            border-color: var(--teal);
+            box-shadow: 0 0 20px rgba(15, 244, 198, 0.15);
+        }
+        .submit-btn.secondary-btn .spinner {
+            border-top-color: var(--teal);
+        }
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, .3);
+            border-top-color: #0A0E1A;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            display: none;
+        }
+        .btn-loading .spinner {
+            display: block
+        }
+        .btn-loading .btn-text {
+            display: none
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
 
-/* Map + Results panel */
-.right-panel{display:flex;flex-direction:column;overflow:hidden}
-#map{height:320px;width:100%;flex-shrink:0;z-index:0}
+        /* Map + Results panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+        #map {
+            height: 320px;
+            width: 100%;
+            flex-shrink: 0;
+            z-index: 0
+        }
 
-/* Radar ring animation */
-@keyframes radar-ring{
-  0%{r:10;opacity:.9;stroke-width:2}
-  100%{r:48;opacity:0;stroke-width:.5}
-}
-.radar-ring{animation:radar-ring 2s ease-out infinite}
-.radar-ring:nth-child(2){animation-delay:.6s}
-.radar-ring:nth-child(3){animation-delay:1.2s}
+        /* Radar ring animation */
+        @keyframes radar-ring {
+            0% {
+                r: 10;
+                opacity: .9;
+                stroke-width: 2
+            }
+            100% {
+                r: 48;
+                opacity: 0;
+                stroke-width: .5
+            }
+        }
+        .radar-ring {
+            animation: radar-ring 2s ease-out infinite
+        }
+        .radar-ring:nth-child(2) {
+            animation-delay: .6s
+        }
+        .radar-ring:nth-child(3) {
+            animation-delay: 1.2s
+        }
 
-/* Results */
-.results-panel{
-  flex:1;overflow-y:auto;padding:20px;
-  display:flex;flex-direction:column;gap:14px;
-}
+        /* Results */
+        .results-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
 
-/* Placeholder */
-.placeholder{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:12px;text-align:center;color:var(--muted);
-  padding:40px;
-}
-.placeholder-icon{font-size:40px;opacity:.3}
-.placeholder h3{font-size:14px;font-weight:500}
-.placeholder p{font-size:12px;opacity:.7;line-height:1.6}
+        /* Placeholder */
+        .placeholder {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-align: center;
+            color: var(--muted);
+            padding: 40px;
+        }
+        .placeholder-icon {
+            font-size: 40px;
+            opacity: .3
+        }
+        .placeholder h3 {
+            font-size: 14px;
+            font-weight: 500
+        }
+        .placeholder p {
+            font-size: 12px;
+            opacity: .7;
+            line-height: 1.6
+        }
 
-/* Result cards */
-.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.result-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:12px;padding:16px;position:relative;overflow:hidden;
-}
-.result-card.full{grid-column:1/-1}
-.result-card.critical{border-color:var(--red);background:rgba(255,77,77,.06)}
-.result-card.warning{border-color:var(--amber);background:rgba(255,179,71,.06)}
-.result-card.ok{border-color:var(--teal);background:rgba(15,244,198,.04)}
+        /* Result cards */
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px
+        }
+        .result-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card.full {
+            grid-column: 1/-1
+        }
+        .result-card.critical {
+            border-color: var(--red);
+            background: rgba(255, 77, 77, .06)
+        }
+        .result-card.warning {
+            border-color: var(--amber);
+            background: rgba(255, 179, 71, .06)
+        }
+        .result-card.ok {
+            border-color: var(--teal);
+            background: rgba(15, 244, 198, .04)
+        }
 
-.card-label{font-size:10px;font-family:var(--mono);letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
-.card-value{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--teal);line-height:1}
-.card-unit{font-size:12px;color:var(--muted);margin-top:4px}
-.card-value.red{color:var(--red)}
-.card-value.amber{color:var(--amber)}
-.card-value.med{font-size:18px;margin-top:4px}
+        .card-label {
+            font-size: 10px;
+            font-family: var(--mono);
+            letter-spacing: 2px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 8px
+        }
+        .card-value {
+            font-family: var(--mono);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--teal);
+            line-height: 1
+        }
+        .card-unit {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px
+        }
+        .card-value.red {
+            color: var(--red)
+        }
+        .card-value.amber {
+            color: var(--amber)
+        }
+        .card-value.med {
+            font-size: 18px;
+            margin-top: 4px
+        }
 
-.badge{
-  display:inline-block;padding:3px 10px;border-radius:20px;
-  font-family:var(--mono);font-size:11px;font-weight:700;margin-top:6px;
-}
-.badge.critical{background:rgba(255,77,77,.15);color:var(--red);border:1px solid rgba(255,77,77,.3)}
-.badge.medium{background:rgba(255,179,71,.15);color:var(--amber);border:1px solid rgba(255,179,71,.3)}
-.badge.low{background:rgba(15,244,198,.1);color:var(--teal);border:1px solid rgba(15,244,198,.25)}
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+        .badge.critical {
+            background: rgba(255, 77, 77, .15);
+            color: var(--red);
+            border: 1px solid rgba(255, 77, 77, .3)
+        }
+        .badge.medium {
+            background: rgba(255, 179, 71, .15);
+            color: var(--amber);
+            border: 1px solid rgba(255, 179, 71, .3)
+        }
+        .badge.low {
+            background: rgba(15, 244, 198, .1);
+            color: var(--teal);
+            border: 1px solid rgba(15, 244, 198, .25)
+        }
 
-/* SOP Banner */
-.sop-banner{
-  border-radius:10px;padding:14px 16px;
-  display:flex;align-items:center;gap:12px;
-  border:1px solid;
-}
-.sop-banner.hazmat{background:rgba(255,77,77,.08);border-color:rgba(255,77,77,.3)}
-.sop-banner.code-red{background:rgba(255,77,77,.08);border-color:rgba(255,77,77,.3)}
-.sop-banner.civic{background:rgba(255,179,71,.08);border-color:rgba(255,179,71,.3)}
-.sop-banner.standard{background:rgba(15,244,198,.05);border-color:rgba(15,244,198,.2)}
-.sop-icon{font-size:22px}
-.sop-text .sop-title{font-size:13px;font-weight:600;letter-spacing:.5px}
-.sop-text .sop-sub{font-size:11px;color:var(--muted);margin-top:2px}
+        /* SOP Banner */
+        .sop-banner {
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid;
+        }
+        .sop-banner.hazmat {
+            background: rgba(255, 77, 77, .08);
+            border-color: rgba(255, 77, 77, .3)
+        }
+        .sop-banner.code-red {
+            background: rgba(255, 77, 77, .08);
+            border-color: rgba(255, 77, 77, .3)
+        }
+        .sop-banner.civic {
+            background: rgba(255, 179, 71, .08);
+            border-color: rgba(255, 179, 71, .3)
+        }
+        .sop-banner.standard {
+            background: rgba(15, 244, 198, .05);
+            border-color: rgba(15, 244, 198, .2)
+        }
+        .sop-icon {
+            font-size: 22px
+        }
+        .sop-text .sop-title {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: .5px
+        }
+        .sop-text .sop-sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px
+        }
 
-/* Deployment */
-.deploy-card{
-  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;
-}
-.deploy-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
-.deploy-row:last-child{border-bottom:none}
-.deploy-key{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
-.deploy-val{font-size:12px;color:var(--text);font-family:var(--mono);text-align:right;max-width:60%;word-break:break-all}
-.deploy-val.teal{color:var(--teal)}
-.deploy-val.red{color:var(--red)}
+        /* Deployment */
+        .deploy-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .deploy-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border)
+        }
+        .deploy-row:last-child {
+            border-bottom: none
+        }
+        .deploy-key {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-family: var(--mono)
+        }
+        .deploy-val {
+            font-size: 12px;
+            color: var(--text);
+            font-family: var(--mono);
+            text-align: right;
+            max-width: 60%;
+            word-break: break-all
+        }
+        .deploy-val.teal {
+            color: var(--teal)
+        }
+        .deploy-val.red {
+            color: var(--red)
+        }
 
-/* Uncertainty bar */
-.uncert-bar{background:var(--border);border-radius:4px;height:6px;margin-top:8px;overflow:hidden}
-.uncert-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--amber));transition:width 1s ease}
+        /* Uncertainty bar */
+        .uncert-bar {
+            background: var(--border);
+            border-radius: 4px;
+            height: 6px;
+            margin-top: 8px;
+            overflow: hidden
+        }
+        .uncert-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--teal), var(--amber));
+            transition: width 1s ease
+        }
 
-/* Error */
-.error-card{
-  background:rgba(255,77,77,.08);border:1px solid rgba(255,77,77,.3);
-  border-radius:10px;padding:16px;color:var(--red);font-size:13px;
-}
+        /* Error */
+        .error-card {
+            background: rgba(255, 77, 77, .08);
+            border: 1px solid rgba(255, 77, 77, .3);
+            border-radius: 10px;
+            padding: 16px;
+            color: var(--red);
+            font-size: 13px;
+        }
 
-.results-hidden{display:none}
-.enter-animation{animation:fadeUp .4s ease both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .results-hidden {
+            display: none
+        }
+        .enter-animation {
+            animation: fadeUp .4s ease both
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
 
-/* Scrollbar */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px
+        }
 
-@media(max-width:900px){
-  .layout{grid-template-columns:1fr;height:auto}
-  .right-panel{min-height:600px}
-  #map{height:240px}
-}
-</style>
+        @media(max-width:900px) {
+            .layout {
+                grid-template-columns: 1fr;
+                height: auto
+            }
+            .right-panel {
+                min-height: 600px
+            }
+            #map {
+                height: 240px
+            }
+        }
+
+        /* ===== FEEDBACK DIALOG ===== */
+        .feedback-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .feedback-overlay.active {
+            display: flex;
+        }
+        .feedback-dialog {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            max-width: 520px;
+            width: 100%;
+            padding: 28px 32px 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            animation: fadeUp .3s ease both;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .feedback-dialog .dialog-title {
+            font-family: var(--mono);
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: var(--teal);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .feedback-dialog .dialog-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .feedback-dialog .field {
+            margin-bottom: 16px;
+        }
+        .feedback-dialog .field label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--muted);
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .feedback-dialog .field input,
+        .feedback-dialog .field select {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 10px 13px;
+            font-family: var(--sans);
+            font-size: 13px;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            width: 100%;
+        }
+        .feedback-dialog .field input:focus,
+        .feedback-dialog .field select:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(15, 244, 198, .1);
+        }
+        .feedback-dialog .field select option {
+            background: var(--card);
+        }
+        .feedback-dialog .field .hint {
+            font-size: 11px;
+            color: var(--muted);
+            opacity: .7;
+            margin-top: 4px;
+        }
+        .feedback-dialog .dialog-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .feedback-dialog .dialog-actions .submit-btn {
+            flex: 1;
+        }
+        .feedback-dialog .dialog-actions .submit-btn.secondary-btn {
+            flex: 0 0 auto;
+            width: auto;
+            padding: 13px 24px;
+        }
+        .feedback-dialog .feedback-success {
+            display: none;
+            text-align: center;
+            padding: 20px 0 12px;
+            color: var(--teal);
+        }
+        .feedback-dialog .feedback-success .check {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        .feedback-dialog .feedback-success .msg {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .feedback-dialog .feedback-success .sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        .feedback-dialog .feedback-error {
+            display: none;
+            text-align: center;
+            padding: 12px 0;
+            color: var(--red);
+            font-size: 13px;
+        }
+        .feedback-dialog .feedback-warning {
+            display: none;
+            text-align: center;
+            padding: 12px 0;
+            color: var(--amber);
+            font-size: 13px;
+        }
+
+        /* feedback trigger button in results */
+        .feedback-trigger-wrap {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 6px;
+        }
+        .feedback-trigger-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 11px;
+            font-family: var(--mono);
+            cursor: pointer;
+            transition: border-color .2s, color .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .feedback-trigger-btn:hover {
+            border-color: var(--teal);
+            color: var(--teal);
+        }
+        .feedback-trigger-btn .icon {
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-mark">AI</div>
-    <span class="logo-name">ASTRAM</span>
-    <span class="logo-ver">V8.2 TITAN</span>
-  </div>
-  <div class="status-dot">
-    <div class="dot"></div>
-    COGNITIVE GRID ONLINE
-  </div>
-</header>
+    <header>
+        <div class="logo">
+            <div class="logo-mark">AI</div>
+            <span class="logo-name">ASTRAM</span>
+            <span class="logo-ver">V8.2 TITAN</span>
+        </div>
+        <div class="status-dot">
+            <div class="dot"></div>
+            COGNITIVE GRID ONLINE
+        </div>
+    </header>
 
-<div class="layout">
+    <div class="layout">
 
-  <!-- LEFT: FORM PANEL -->
-  <div class="form-panel">
-    <div>
-      <div class="panel-label">Incident Report</div>
-      <div class="section-title">New Traffic Event</div>
+        <!-- LEFT: FORM PANEL -->
+        <div class="form-panel">
+            <div>
+                <div class="panel-label">Incident Report</div>
+                <div class="section-title">New Traffic Event</div>
+            </div>
+
+            <div class="field">
+                <label>Event Type</label>
+                <select id="event_type">
+                    <option value="Planned">Planned</option>
+                    <option value="Unplanned" selected>Unplanned</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Event Cause</label>
+                <select id="event_cause">
+                    <option value="Accident">Collision / Accident</option>
+                    <option value="Breakdown">Vehicle Breakdown</option>
+                    <option value="Flood">Waterlogging</option>
+                    <option value="Fire">Fire / Chemical Spill</option>
+                    <option value="Roadwork">Construction</option>
+                    <option value="Signal Failure">Signal Failure</option>
+                    <option value="VIP Movement">VIP / VVIP Convoy</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Vehicle Type</label>
+                <select id="veh_type">
+                    <option value="Car">Car / SUV</option>
+                    <option value="Truck">Truck / Lorry</option>
+                    <option value="Bus">Bus / Minibus</option>
+                    <option value="Bike">Motorcycle / Bike</option>
+                    <option value="Auto">Auto Rickshaw</option>
+                    <option value="Heavy Vehicle">Heavy Vehicle</option>
+                </select>
+            </div>
+
+            <div class="coord-row">
+                <div class="field">
+                    <label>Latitude</label>
+                    <input type="number" id="latitude" value="12.9716" step="0.0001" placeholder="12.9716" />
+                </div>
+                <div class="field">
+                    <label>Longitude</label>
+                    <input type="number" id="longitude" value="77.5946" step="0.0001" placeholder="77.5946" />
+                </div>
+            </div>
+            <p style="font-size:11px;color:var(--muted);margin-top:-10px">
+                💡 Click on the map to set coordinates — Bengaluru metro area only
+            </p>
+
+            <div class="field">
+                <label>Incident Description</label>
+                <textarea id="description" rows="4" placeholder="Describe the incident in detail… e.g. Fatal crash on Outer Ring Road near Silk Board, truck overturned blocking 3 lanes, multiple injuries, debris on road."></textarea>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="runPrediction()">
+                <div class="spinner"></div>
+                <span class="btn-text">⚡ Run Cognitive Analysis</span>
+            </button>
+
+            <button class="submit-btn secondary-btn" id="liveBtn" onclick="runLiveFeedSimulation()" style="margin-top:8px">
+                <div class="spinner"></div>
+                <span class="btn-text">📡 Simulate Live Telemetry Feed</span>
+            </button>
+
+            <div style="border-top:1px solid var(--border);padding-top:16px">
+                <div class="panel-label" style="margin-bottom:10px">Quick presets</div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <button onclick="loadPreset('fatal')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🚨 Fatal Crash</button>
+                    <button onclick="loadPreset('flood')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🌊 Flood</button>
+                    <button onclick="loadPreset('fire')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🔥 Hazmat</button>
+                    <button onclick="loadPreset('breakdown')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🚗 Breakdown</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: MAP + RESULTS -->
+        <div class="right-panel">
+            <div id="map"></div>
+
+            <div class="results-panel" id="resultsPanel">
+                <div class="placeholder" id="placeholder">
+                    <div class="placeholder-icon">🛰️</div>
+                    <h3>Awaiting incident data</h3>
+                    <p>Fill in the form and click <strong>Run Cognitive Analysis</strong> to get AI-powered severity predictions, duration estimates, and resource deployment plans.</p>
+                </div>
+
+                <div id="results" class="results-hidden"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="field">
-      <label>Event Type</label>
-      <select id="event_type">
-        <option value="Planned">Planned</option>
-        <option value="Unplanned" selected>Unplanned</option>
-      </select>
+    <!-- ===== FEEDBACK DIALOG ===== -->
+    <div class="feedback-overlay" id="feedbackOverlay">
+        <div class="feedback-dialog" id="feedbackDialog">
+            <div class="dialog-title">📋 Operator Feedback</div>
+            <div class="dialog-sub">Help us improve by reporting the actual outcome of this incident.</div>
+
+            <form id="feedbackForm" onsubmit="handleFeedbackSubmit(event)">
+                <input type="hidden" id="feedbackEventId" value="" />
+
+                <div class="field">
+                    <label for="fbSeverity">Actual Severity (0–100)</label>
+                    <input type="number" id="fbSeverity" min="0" max="100" step="1" value="50" required />
+                    <div class="hint">0 = minor, 100 = catastrophic</div>
+                </div>
+
+                <div class="field">
+                    <label for="fbDuration">Actual Duration (minutes)</label>
+                    <input type="number" id="fbDuration" min="0" step="1" value="45" required />
+                    <div class="hint">How long did the incident last?</div>
+                </div>
+
+                <div class="field">
+                    <label for="fbRoadClosed">Road Closed?</label>
+                    <select id="fbRoadClosed">
+                        <option value="true">Yes</option>
+                        <option value="false" selected>No</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="fbOfficers">Officers Deployed (actual)</label>
+                    <input type="number" id="fbOfficers" min="0" step="1" value="4" required />
+                    <div class="hint">Number of personnel who responded</div>
+                </div>
+
+                <div class="dialog-actions">
+                    <button type="button" class="submit-btn secondary-btn" onclick="closeFeedback()">Cancel</button>
+                    <button type="submit" class="submit-btn" id="feedbackSubmitBtn">
+                        <div class="spinner"></div>
+                        <span class="btn-text">📤 Submit Feedback</span>
+                    </button>
+                </div>
+
+                <div class="feedback-success" id="feedbackSuccess">
+                    <div class="check">✅</div>
+                    <div class="msg">Feedback submitted successfully!</div>
+                    <div class="sub">Thank you for helping improve ASTRAM-AI.</div>
+                </div>
+                <div class="feedback-warning" id="feedbackWarning">
+                    <div class="check">📦</div>
+                    <div class="msg">Feedback saved locally (server unavailable)</div>
+                    <div class="sub">Your feedback has been stored in your browser and will be sent when the server is back online.</div>
+                </div>
+                <div class="feedback-error" id="feedbackError">⚠️ Failed to submit feedback. Please try again.</div>
+            </form>
+        </div>
     </div>
 
-    <div class="field">
-      <label>Event Cause</label>
-      <select id="event_cause">
-        <option value="Accident">Collision / Accident</option>
-        <option value="Breakdown">Vehicle Breakdown</option>
-        <option value="Flood">Waterlogging</option>
-        <option value="Fire">Fire / Chemical Spill</option>
-        <option value="Roadwork">Construction</option>
-        <option value="Signal Failure">Signal Failure</option>
-        <option value="VIP Movement">VIP / VVIP Convoy</option>
-      </select>
-    </div>
+    <script>
+        const API_URL = "https://astram-1.onrender.com/api/dashboard/predict";
+        const LIVE_FEED_URL = "https://astram-1.onrender.com/api/dashboard/live-feed";
+        const FEEDBACK_URL = "https://astram-1.onrender.com/api/dashboard/operator-feedback";
 
-    <div class="field">
-      <label>Vehicle Type</label>
-      <select id="veh_type">
-        <option value="Car">Car / SUV</option>
-        <option value="Truck">Truck / Lorry</option>
-        <option value="Bus">Bus / Minibus</option>
-        <option value="Bike">Motorcycle / Bike</option>
-        <option value="Auto">Auto Rickshaw</option>
-        <option value="Heavy Vehicle">Heavy Vehicle</option>
-      </select>
-    </div>
+        // ─── current event ID (set after each prediction) ───
+        let currentEventId = null;
 
-    <div class="coord-row">
-      <div class="field">
-        <label>Latitude</label>
-        <input type="number" id="latitude" value="12.9716" step="0.0001" placeholder="12.9716"/>
-      </div>
-      <div class="field">
-        <label>Longitude</label>
-        <input type="number" id="longitude" value="77.5946" step="0.0001" placeholder="77.5946"/>
-      </div>
-    </div>
-    <p style="font-size:11px;color:var(--muted);margin-top:-10px">
-      💡 Click on the map to set coordinates — Bengaluru metro area only
-    </p>
+        // ─── BENGALURU BOUNDS ───
+        const BANGALORE_BOUNDS = L.latLngBounds([12.75, 77.42], [13.20, 77.82]);
+        const BANGALORE_CENTER = [12.9716, 77.5946];
 
-    <div class="field">
-      <label>Incident Description</label>
-      <textarea id="description" rows="4" placeholder="Describe the incident in detail… e.g. Fatal crash on Outer Ring Road near Silk Board, truck overturned blocking 3 lanes, multiple injuries, debris on road."></textarea>
-    </div>
+        function clampToBangalore(lat, lng) {
+            const sw = BANGALORE_BOUNDS.getSouthWest();
+            const ne = BANGALORE_BOUNDS.getNorthEast();
+            return [
+                Math.min(Math.max(lat, sw.lat), ne.lat),
+                Math.min(Math.max(lng, sw.lng), ne.lng)
+            ];
+        }
 
-    <button class="submit-btn" id="submitBtn" onclick="runPrediction()">
-      <div class="spinner"></div>
-      <span class="btn-text">⚡ Run Cognitive Analysis</span>
-    </button>
+        // ─── MAP ───
+        const map = L.map('map', {
+            zoomControl: true,
+            maxBounds: BANGALORE_BOUNDS,
+            maxBoundsViscosity: 1.0,
+            minZoom: 11,
+            maxZoom: 18
+        }).fitBounds(BANGALORE_BOUNDS);
 
-    <button class="submit-btn secondary-btn" id="liveBtn" onclick="runLiveFeedSimulation()" style="margin-top:8px">
-      <div class="spinner"></div>
-      <span class="btn-text">📡 Simulate Live Telemetry Feed</span>
-    </button>
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors © CARTO',
+            minZoom: 11,
+            maxZoom: 18,
+            bounds: BANGALORE_BOUNDS
+        }).addTo(map);
 
-    <div style="border-top:1px solid var(--border);padding-top:16px">
-      <div class="panel-label" style="margin-bottom:10px">Quick presets</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        <button onclick="loadPreset('fatal')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🚨 Fatal Crash</button>
-        <button onclick="loadPreset('flood')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🌊 Flood</button>
-        <button onclick="loadPreset('fire')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🔥 Hazmat</button>
-        <button onclick="loadPreset('breakdown')" style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--sans)">🚗 Breakdown</button>
-      </div>
-    </div>
-  </div>
+        L.rectangle(BANGALORE_BOUNDS, {
+            color: '#0FF4C6',
+            weight: 1,
+            opacity: 0.35,
+            fill: false,
+            dashArray: '6, 8',
+            interactive: false
+        }).addTo(map);
 
-  <!-- RIGHT: MAP + RESULTS -->
-  <div class="right-panel">
-    <div id="map"></div>
+        const incidentIcon = L.divIcon({
+            className: '',
+            html: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+            <circle class="radar-ring" cx="30" cy="30" r="10" fill="none" stroke="#0FF4C6" stroke-width="2"/>
+            <circle class="radar-ring" cx="30" cy="30" r="10" fill="none" stroke="#0FF4C6" stroke-width="2"/>
+            <circle cx="30" cy="30" r="10" fill="#0FF4C6" fill-opacity="0.2" stroke="#0FF4C6" stroke-width="2"/>
+            <circle cx="30" cy="30" r="5" fill="#0FF4C6"/>
+            <style>
+              @keyframes radar-ring{0%{r:8;opacity:.9;stroke-width:2}100%{r:40;opacity:0;stroke-width:.5}}
+              .radar-ring{animation:radar-ring 2s ease-out infinite}
+              .radar-ring:nth-child(2){animation-delay:.8s}
+            </style>
+          </svg>`,
+            iconSize: [60, 60],
+            iconAnchor: [30, 30]
+        });
 
-    <div class="results-panel" id="resultsPanel">
-      <div class="placeholder" id="placeholder">
-        <div class="placeholder-icon">🛰️</div>
-        <h3>Awaiting incident data</h3>
-        <p>Fill in the form and click <strong>Run Cognitive Analysis</strong> to get AI-powered severity predictions, duration estimates, and resource deployment plans.</p>
-      </div>
+        let marker = L.marker(BANGALORE_CENTER, { icon: incidentIcon }).addTo(map);
+        let dispatchMarker = null;
+        let routeLine = null;
 
-      <div id="results" class="results-hidden"></div>
-    </div>
-  </div>
-</div>
+        map.on('click', function(e) {
+            const [lat, lng] = clampToBangalore(e.latlng.lat, e.latlng.lng);
+            document.getElementById('latitude').value = lat.toFixed(4);
+            document.getElementById('longitude').value = lng.toFixed(4);
+            marker.setLatLng([lat, lng]);
+        });
 
-<script>
-const API_URL = "https://astram-1.onrender.com/api/dashboard/predict";
-const LIVE_FEED_URL = "https://astram-1.onrender.com/api/dashboard/live-feed";
+        ['latitude', 'longitude'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                const lat = parseFloat(document.getElementById('latitude').value);
+                const lng = parseFloat(document.getElementById('longitude').value);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    const [clat, clng] = clampToBangalore(lat, lng);
+                    document.getElementById('latitude').value = clat.toFixed(4);
+                    document.getElementById('longitude').value = clng.toFixed(4);
+                    marker.setLatLng([clat, clng]);
+                    map.panTo([clat, clng]);
+                }
+            });
+        });
 
-// Bengaluru metropolitan bounds (SW → NE)
-const BANGALORE_BOUNDS = L.latLngBounds([12.75, 77.42], [13.20, 77.82]);
-const BANGALORE_CENTER = [12.9716, 77.5946];
+        // ─── PRESETS ───
+        const presets = {
+            fatal: {
+                event_type: 'Unplanned',
+                event_cause: 'Accident',
+                veh_type: 'Truck',
+                latitude: 12.9352,
+                longitude: 77.6245,
+                description: 'Fatal crash on Outer Ring Road near Silk Board junction. Truck overturned blocking all 3 lanes, multiple injuries, ambulance needed urgently.'
+            },
+            flood: {
+                event_type: 'Unplanned',
+                event_cause: 'Flood',
+                veh_type: 'Car',
+                latitude: 12.9698,
+                longitude: 77.7499,
+                description: 'Heavy flooding on Sarjapur Road, water level knee-deep. Multiple vehicles stalled. Road completely inaccessible. Immediate civic intervention required.'
+            },
+            fire: {
+                event_type: 'Unplanned',
+                event_cause: 'Fire',
+                veh_type: 'Truck',
+                latitude: 12.9719,
+                longitude: 77.5937,
+                description: 'Chemical spill and fire on industrial vehicle near Peenya Industrial Area. Hazmat risk, chemical smoke spreading. Evacuate 500m radius.'
+            },
+            breakdown: {
+                event_type: 'Unplanned',
+                event_cause: 'Breakdown',
+                veh_type: 'Bus',
+                latitude: 13.0199,
+                longitude: 77.5956,
+                description: 'BMTC bus broken down near Hebbal flyover, blocking left lane. Minor traffic jam building. Assistance required.'
+            }
+        };
 
-function clampToBangalore(lat, lng) {
-  const sw = BANGALORE_BOUNDS.getSouthWest();
-  const ne = BANGALORE_BOUNDS.getNorthEast();
-  return [
-    Math.min(Math.max(lat, sw.lat), ne.lat),
-    Math.min(Math.max(lng, sw.lng), ne.lng)
-  ];
-}
+        function loadPreset(key) {
+            const p = presets[key];
+            const [lat, lng] = clampToBangalore(p.latitude, p.longitude);
+            document.getElementById('event_type').value = p.event_type;
+            document.getElementById('event_cause').value = p.event_cause;
+            document.getElementById('veh_type').value = p.veh_type;
+            document.getElementById('latitude').value = lat.toFixed(4);
+            document.getElementById('longitude').value = lng.toFixed(4);
+            document.getElementById('description').value = p.description;
+            marker.setLatLng([lat, lng]);
+            map.panTo([lat, lng]);
+        }
 
-const map = L.map('map', {
-  zoomControl: true,
-  maxBounds: BANGALORE_BOUNDS,
-  maxBoundsViscosity: 1.0,
-  minZoom: 11,
-  maxZoom: 18
-}).fitBounds(BANGALORE_BOUNDS);
+        // ─── GENERATE EVENT ID ───
+        function generateEventId() {
+            const ts = Date.now().toString(36);
+            const rand = Math.random().toString(36).substring(2, 6);
+            return `EVT-${ts}-${rand}`.toUpperCase();
+        }
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '© OpenStreetMap contributors © CARTO',
-  minZoom: 11,
-  maxZoom: 18,
-  bounds: BANGALORE_BOUNDS
-}).addTo(map);
+        // ─── RUN PREDICTION ───
+        async function runPrediction() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.classList.add('btn-loading');
 
-L.rectangle(BANGALORE_BOUNDS, {
-  color: '#0FF4C6',
-  weight: 1,
-  opacity: 0.35,
-  fill: false,
-  dashArray: '6, 8',
-  interactive: false
-}).addTo(map);
+            const body = {
+                event_type: document.getElementById('event_type').value,
+                event_cause: document.getElementById('event_cause').value,
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value),
+                veh_type: document.getElementById('veh_type').value,
+                description: document.getElementById('description').value
+            };
 
-const incidentIcon = L.divIcon({
-  className: '',
-  html: `<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-    <circle class="radar-ring" cx="30" cy="30" r="10" fill="none" stroke="#0FF4C6" stroke-width="2"/>
-    <circle class="radar-ring" cx="30" cy="30" r="10" fill="none" stroke="#0FF4C6" stroke-width="2"/>
-    <circle cx="30" cy="30" r="10" fill="#0FF4C6" fill-opacity="0.2" stroke="#0FF4C6" stroke-width="2"/>
-    <circle cx="30" cy="30" r="5" fill="#0FF4C6"/>
-    <style>
-      @keyframes radar-ring{0%{r:8;opacity:.9;stroke-width:2}100%{r:40;opacity:0;stroke-width:.5}}
-      .radar-ring{animation:radar-ring 2s ease-out infinite}
-      .radar-ring:nth-child(2){animation-delay:.8s}
-    </style>
-  </svg>`,
-  iconSize: [60, 60],
-  iconAnchor: [30, 30]
-});
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || `HTTP ${res.status}`);
+                }
+                const data = await res.json();
+                currentEventId = generateEventId();
+                renderResults(data, body);
+            } catch (e) {
+                renderError(e.message);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+            }
+        }
 
-let marker = L.marker(BANGALORE_CENTER, { icon: incidentIcon }).addTo(map);
-let dispatchMarker = null;
-let routeLine = null;
+        // ─── LIVE FEED SIMULATION ───
+        async function runLiveFeedSimulation() {
+            const btn = document.getElementById('liveBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            submitBtn.disabled = true;
+            btn.classList.add('btn-loading');
 
-map.on('click', function(e) {
-  const [lat, lng] = clampToBangalore(e.latlng.lat, e.latlng.lng);
-  document.getElementById('latitude').value = lat.toFixed(4);
-  document.getElementById('longitude').value = lng.toFixed(4);
-  marker.setLatLng([lat, lng]);
-});
+            const keys = Object.keys(presets);
+            const p = presets[keys[Math.floor(Math.random() * keys.length)]];
+            const [lat, lng] = clampToBangalore(p.latitude, p.longitude);
+            document.getElementById('event_type').value = p.event_type;
+            document.getElementById('event_cause').value = p.event_cause;
+            document.getElementById('veh_type').value = p.veh_type;
+            document.getElementById('latitude').value = lat.toFixed(4);
+            document.getElementById('longitude').value = lng.toFixed(4);
+            document.getElementById('description').value = p.description;
+            marker.setLatLng([lat, lng]);
+            map.panTo([lat, lng]);
 
-['latitude','longitude'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => {
-    const lat = parseFloat(document.getElementById('latitude').value);
-    const lng = parseFloat(document.getElementById('longitude').value);
-    if (!isNaN(lat) && !isNaN(lng)) {
-      const [clat, clng] = clampToBangalore(lat, lng);
-      document.getElementById('latitude').value = clat.toFixed(4);
-      document.getElementById('longitude').value = clng.toFixed(4);
-      marker.setLatLng([clat, clng]);
-      map.panTo([clat, clng]);
-    }
-  });
-});
+            const body = {
+                event_type: p.event_type,
+                event_cause: p.event_cause,
+                latitude: lat,
+                longitude: lng,
+                veh_type: p.veh_type,
+                description: p.description
+            };
 
-const presets = {
-  fatal: {
-    event_type: 'Unplanned', event_cause: 'Accident', veh_type: 'Truck',
-    latitude: 12.9352, longitude: 77.6245,
-    description: 'Fatal crash on Outer Ring Road near Silk Board junction. Truck overturned blocking all 3 lanes, multiple injuries, ambulance needed urgently.'
-  },
-  flood: {
-    event_type: 'Unplanned', event_cause: 'Flood', veh_type: 'Car',
-    latitude: 12.9698, longitude: 77.7499,
-    description: 'Heavy flooding on Sarjapur Road, water level knee-deep. Multiple vehicles stalled. Road completely inaccessible. Immediate civic intervention required.'
-  },
-  fire: {
-    event_type: 'Unplanned', event_cause: 'Fire', veh_type: 'Truck',
-    latitude: 12.9719, longitude: 77.5937,
-    description: 'Chemical spill and fire on industrial vehicle near Peenya Industrial Area. Hazmat risk, chemical smoke spreading. Evacuate 500m radius.'
-  },
-  breakdown: {
-    event_type: 'Unplanned', event_cause: 'Breakdown', veh_type: 'Bus',
-    latitude: 13.0199, longitude: 77.5956,
-    description: 'BMTC bus broken down near Hebbal flyover, blocking left lane. Minor traffic jam building. Assistance required.'
-  }
-};
+            try {
+                const res = await fetch(LIVE_FEED_URL, {
+                    method: 'GET'
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || `HTTP ${res.status}`);
+                }
+                const data = await res.json();
+                currentEventId = generateEventId();
+                renderResults(data, body);
+            } catch (e) {
+                renderError(e.message);
+            } finally {
+                btn.disabled = false;
+                submitBtn.disabled = false;
+                btn.classList.remove('btn-loading');
+            }
+        }
 
-function loadPreset(key) {
-  const p = presets[key];
-  const [lat, lng] = clampToBangalore(p.latitude, p.longitude);
-  document.getElementById('event_type').value = p.event_type;
-  document.getElementById('event_cause').value = p.event_cause;
-  document.getElementById('veh_type').value = p.veh_type;
-  document.getElementById('latitude').value = lat.toFixed(4);
-  document.getElementById('longitude').value = lng.toFixed(4);
-  document.getElementById('description').value = p.description;
-  marker.setLatLng([lat, lng]);
-  map.panTo([lat, lng]);
-}
+        // ─── SUBMIT FEEDBACK (with fallback) ───
+        async function submitFeedback(eventId, actualSeverity, actualDurationMins, actualRoadClosed, actualOfficers) {
+            const payload = {
+                event_id: eventId,
+                actual_severity: actualSeverity,
+                actual_duration_mins: actualDurationMins,
+                actual_road_closed: actualRoadClosed,
+                actual_officers: actualOfficers
+            };
 
-async function runPrediction() {
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.classList.add('btn-loading');
+            try {
+                const res = await fetch(FEEDBACK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`HTTP ${res.status} – ${errText}`);
+                }
+                return { success: true, server: true };
+            } catch (e) {
+                console.warn('Feedback server error, saving locally:', e.message);
+                // Fallback: store in localStorage
+                try {
+                    const existing = JSON.parse(localStorage.getItem('astram_feedback_queue') || '[]');
+                    existing.push({ ...payload, timestamp: new Date().toISOString() });
+                    localStorage.setItem('astram_feedback_queue', JSON.stringify(existing));
+                    return { success: true, server: false, local: true };
+                } catch (lsErr) {
+                    console.error('Local storage fallback failed:', lsErr);
+                    return { success: false, error: e.message };
+                }
+            }
+        }
 
-  const body = {
-    event_type: document.getElementById('event_type').value,
-    event_cause: document.getElementById('event_cause').value,
-    latitude: parseFloat(document.getElementById('latitude').value),
-    longitude: parseFloat(document.getElementById('longitude').value),
-    veh_type: document.getElementById('veh_type').value,
-    description: document.getElementById('description').value
-  };
+        // ─── FEEDBACK DIALOG CONTROLS ───
+        function openFeedback() {
+            if (!currentEventId) {
+                alert('No active incident to provide feedback for. Please run a prediction first.');
+                return;
+            }
+            document.getElementById('feedbackEventId').value = currentEventId;
+            // Reset form state
+            document.getElementById('feedbackSuccess').style.display = 'none';
+            document.getElementById('feedbackWarning').style.display = 'none';
+            document.getElementById('feedbackError').style.display = 'none';
+            const btn = document.getElementById('feedbackSubmitBtn');
+            btn.disabled = false;
+            btn.classList.remove('btn-loading');
+            btn.querySelector('.btn-text').textContent = '📤 Submit Feedback';
+            // Pre-fill defaults
+            document.getElementById('fbSeverity').value = 50;
+            document.getElementById('fbDuration').value = 45;
+            document.getElementById('fbRoadClosed').value = 'false';
+            document.getElementById('fbOfficers').value = 4;
+            document.getElementById('feedbackOverlay').classList.add('active');
+        }
 
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    renderResults(data, body);
-  } catch (e) {
-    renderError(e.message);
-  } finally {
-    btn.disabled = false;
-    btn.classList.remove('btn-loading');
-  }
-}
+        function closeFeedback() {
+            document.getElementById('feedbackOverlay').classList.remove('active');
+        }
 
-async function runLiveFeedSimulation() {
-  const btn = document.getElementById('liveBtn');
-  const submitBtn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  submitBtn.disabled = true;
-  btn.classList.add('btn-loading');
+        // Close on overlay click
+        document.getElementById('feedbackOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeFeedback();
+        });
 
-  const keys = Object.keys(presets);
-  const p = presets[keys[Math.floor(Math.random() * keys.length)]];
-  const [lat, lng] = clampToBangalore(p.latitude, p.longitude);
-  document.getElementById('event_type').value = p.event_type;
-  document.getElementById('event_cause').value = p.event_cause;
-  document.getElementById('veh_type').value = p.veh_type;
-  document.getElementById('latitude').value = lat.toFixed(4);
-  document.getElementById('longitude').value = lng.toFixed(4);
-  document.getElementById('description').value = p.description;
-  marker.setLatLng([lat, lng]);
-  map.panTo([lat, lng]);
+        // ─── HANDLE FEEDBACK FORM SUBMIT ───
+        async function handleFeedbackSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('feedbackSubmitBtn');
+            btn.disabled = true;
+            btn.classList.add('btn-loading');
+            btn.querySelector('.btn-text').textContent = 'Submitting…';
 
-  const body = {
-    event_type: p.event_type,
-    event_cause: p.event_cause,
-    latitude: lat,
-    longitude: lng,
-    veh_type: p.veh_type,
-    description: p.description
-  };
+            const eventId = document.getElementById('feedbackEventId').value;
+            const severity = parseInt(document.getElementById('fbSeverity').value);
+            const duration = parseInt(document.getElementById('fbDuration').value);
+            const roadClosed = document.getElementById('fbRoadClosed').value === 'true';
+            const officers = parseInt(document.getElementById('fbOfficers').value);
 
-  try {
-    const res = await fetch(LIVE_FEED_URL, {
-      method: 'GET'
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    renderResults(data);
-  } catch (e) {
-    renderError(e.message);
-  } finally {
-    btn.disabled = false;
-    submitBtn.disabled = false;
-    btn.classList.remove('btn-loading');
-  }
-}
+            // Validate
+            if (isNaN(severity) || severity < 0 || severity > 100) {
+                alert('Severity must be between 0 and 100.');
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                btn.querySelector('.btn-text').textContent = '📤 Submit Feedback';
+                return;
+            }
+            if (isNaN(duration) || duration < 0) {
+                alert('Duration must be a positive number.');
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                btn.querySelector('.btn-text').textContent = '📤 Submit Feedback';
+                return;
+            }
+            if (isNaN(officers) || officers < 0) {
+                alert('Officers must be a positive number.');
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                btn.querySelector('.btn-text').textContent = '📤 Submit Feedback';
+                return;
+            }
 
-function renderResults(data, input) {
-  document.getElementById('placeholder').style.display = 'none';
+            const result = await submitFeedback(eventId, severity, duration, roadClosed, officers);
 
-  // Safeguard against missing/malformed response structures
-  const bf = data.bayesian_forecast || {};
-  const llm = data.llm_reasoning_engine || {};
-  const rl = data.rl_agentic_deployment || {};
+            const successEl = document.getElementById('feedbackSuccess');
+            const warningEl = document.getElementById('feedbackWarning');
+            const errorEl = document.getElementById('feedbackError');
 
-  // Extract values with robust defaults to prevent undefined crashes
-  const sev = typeof bf.mean_impact_score === 'number' ? bf.mean_impact_score : 0;
-  const duration = typeof bf.mean_duration_mins === 'number' ? bf.mean_duration_mins : 0;
-  const confidence = bf.confidence_interval || '± 0.0 Log-Mins (95% CI)';
-  const epistemic = typeof bf.epistemic_uncertainty === 'number' ? bf.epistemic_uncertainty : 0;
-  
-  const roadClosure = !!bf.ai_predicted_road_closure;
-  const forcedClosure = !!llm.force_road_closure;
-  const hazmatRisk = !!llm.hazmat_risk;
+            if (result.success) {
+                if (result.server === false && result.local === true) {
+                    // Saved locally only
+                    warningEl.style.display = 'block';
+                    successEl.style.display = 'none';
+                    errorEl.style.display = 'none';
+                } else {
+                    successEl.style.display = 'block';
+                    warningEl.style.display = 'none';
+                    errorEl.style.display = 'none';
+                }
+                btn.style.display = 'none';
+                const cancelBtn = document.querySelector('#feedbackForm .dialog-actions .secondary-btn');
+                if (cancelBtn) cancelBtn.style.display = 'none';
+                setTimeout(() => {
+                    closeFeedback();
+                    successEl.style.display = 'none';
+                    warningEl.style.display = 'none';
+                    btn.style.display = 'flex';
+                    const cancelBtn2 = document.querySelector('#feedbackForm .dialog-actions .secondary-btn');
+                    if (cancelBtn2) cancelBtn2.style.display = 'inline-block';
+                    btn.disabled = false;
+                    btn.classList.remove('btn-loading');
+                    btn.querySelector('.btn-text').textContent = '📤 Submit Feedback';
+                }, 2500);
+            } else {
+                errorEl.style.display = 'block';
+                errorEl.textContent = '⚠️ ' + (result.error || 'Failed to submit feedback. Please try again.');
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                btn.querySelector('.btn-text').textContent = '📤 Submit Feedback';
+            }
+        }
 
-  const priority = llm.inferred_priority || 'Low';
-  const urgency = typeof llm.sentiment_vector === 'number' ? llm.sentiment_vector : 1.0;
+        // ─── RENDER RESULTS ───
+        function renderResults(data, input) {
+            document.getElementById('placeholder').style.display = 'none';
 
-  const dispatchNode = rl.dispatch_node || 'Allocating…';
-  const officers = typeof rl.officers_assigned === 'number' ? rl.officers_assigned : (rl.officers_assigned || 0);
-  const barricadesCount = typeof rl.barricades === 'number' ? rl.barricades : (rl.barricades || 0);
-  const specialUnits = rl.special_units || 'Standard Units';
+            const bf = data.bayesian_forecast || {};
+            const llm = data.llm_reasoning_engine || {};
+            const rl = data.rl_agentic_deployment || {};
 
-  // Determine css classes for priority and impact
-  const sevClass = sev >= 65 ? 'critical' : sev >= 35 ? 'warning' : 'ok';
-  const sevColor = sev >= 65 ? 'red' : sev >= 35 ? 'amber' : '';
-  const priorityBadgeClass = priority === 'High' ? 'critical' : priority === 'Medium' ? 'medium' : 'low';
+            const sev = typeof bf.mean_impact_score === 'number' ? bf.mean_impact_score : 0;
+            const duration = typeof bf.mean_duration_mins === 'number' ? bf.mean_duration_mins : 0;
+            const confidence = bf.confidence_interval || '± 0.0 Log-Mins (95% CI)';
+            const epistemic = typeof bf.epistemic_uncertainty === 'number' ? bf.epistemic_uncertainty : 0;
 
-  // SOP mappings
-  const sopMap = {
-    'HAZMAT_PROTOCOL': { icon: '☢️', label: 'HAZMAT Protocol Active', sub: 'Chemical/fire risk detected — specialist units dispatched', cls: 'hazmat' },
-    'CODE_RED_MEDICAL': { icon: '🚨', label: 'Code Red — Medical Emergency', sub: 'Fatal or serious injury event — emergency services alerted', cls: 'code-red' },
-    'CIVIC_INFRA_ALERT': { icon: '🌊', label: 'Civic Infrastructure Alert', sub: 'Flood/waterlogging — civic team and pumping units required', cls: 'civic' },
-    'Standard': { icon: '✅', label: 'Standard Operating Procedure', sub: 'Routine incident — standard response units assigned', cls: 'standard' },
-  };
-  const sop = sopMap[llm.sop_flag] || sopMap['Standard'];
+            const roadClosure = !!bf.ai_predicted_road_closure;
+            const forcedClosure = !!llm.force_road_closure;
+            const hazmatRisk = !!llm.hazmat_risk;
 
-  const uncertainty = Math.min(100, Math.round(epistemic * 100));
+            const priority = llm.inferred_priority || 'Low';
+            const urgency = typeof llm.sentiment_vector === 'number' ? llm.sentiment_vector : 1.0;
 
-  // 1. MAP ROUTE VISUALIZATION (Leaflet)
-  const lat = parseFloat(document.getElementById('latitude').value) || 12.9716;
-  const lng = parseFloat(document.getElementById('longitude').value) || 77.5946;
+            const dispatchNode = rl.dispatch_node || 'Allocating…';
+            const officers = typeof rl.officers_assigned === 'number' ? rl.officers_assigned : (rl.officers_assigned || 0);
+            const barricadesCount = typeof rl.barricades === 'number' ? rl.barricades : (rl.barricades || 0);
+            const specialUnits = rl.special_units || 'Standard Units';
 
-  // Clear previous dispatch marker and route line
-  if (dispatchMarker) map.removeLayer(dispatchMarker);
-  if (routeLine) map.removeLayer(routeLine);
+            const sevClass = sev >= 65 ? 'critical' : sev >= 35 ? 'warning' : 'ok';
+            const sevColor = sev >= 65 ? 'red' : sev >= 35 ? 'amber' : '';
+            const priorityBadgeClass = priority === 'High' ? 'critical' : priority === 'Medium' ? 'medium' : 'low';
 
-  // If there's a dispatch node, draw it on the map and connect with a line
-  if (rl.dispatch_node && rl.dispatch_node !== 'Allocating…') {
-    const nodeName = rl.dispatch_node;
-    let hash = 0;
-    for (let i = 0; i < nodeName.length; i++) {
-      hash = nodeName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    // Offset dispatch station by a deterministic 1-2 km for visual appeal
-    const offsetLat = ((Math.abs(hash) % 100) / 4000) - 0.012;
-    const offsetLng = (((Math.abs(hash) >> 8) % 100) / 4000) - 0.012;
-    const dispatchLat = lat + offsetLat;
-    const dispatchLng = lng + offsetLng;
+            const sopMap = {
+                'HAZMAT_PROTOCOL': { icon: '☢️', label: 'HAZMAT Protocol Active', sub: 'Chemical/fire risk detected — specialist units dispatched',
+                    cls: 'hazmat' },
+                'CODE_RED_MEDICAL': { icon: '🚨', label: 'Code Red — Medical Emergency', sub: 'Fatal or serious injury event — emergency services alerted',
+                    cls: 'code-red' },
+                'CIVIC_INFRA_ALERT': { icon: '🌊', label: 'Civic Infrastructure Alert', sub: 'Flood/waterlogging — civic team and pumping units required',
+                    cls: 'civic' },
+                'Standard': { icon: '✅', label: 'Standard Operating Procedure', sub: 'Routine incident — standard response units assigned',
+                    cls: 'standard' },
+            };
+            const sop = sopMap[llm.sop_flag] || sopMap['Standard'];
 
-    const dispatchIconSvg = L.divIcon({
-      className: '',
-      html: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-        <circle cx="20" cy="20" r="10" fill="#0A0E1A" stroke="#0FF4C6" stroke-width="2"/>
-        <circle cx="20" cy="20" r="5" fill="#0FF4C6"/>
-      </svg>`,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
-    });
+            const uncertainty = Math.min(100, Math.round(epistemic * 100));
 
-    dispatchMarker = L.marker([dispatchLat, dispatchLng], { icon: dispatchIconSvg }).addTo(map)
-      .bindPopup(`<b>Dispatch Station:</b> ${rl.dispatch_node}`);
+            // ─── MAP ROUTE ───
+            const lat = parseFloat(document.getElementById('latitude').value) || 12.9716;
+            const lng = parseFloat(document.getElementById('longitude').value) || 77.5946;
 
-    routeLine = L.polyline([[dispatchLat, dispatchLng], [lat, lng]], {
-      color: '#0FF4C6',
-      weight: 3,
-      dashArray: '6, 10',
-      opacity: 0.85
-    }).addTo(map);
+            if (dispatchMarker) map.removeLayer(dispatchMarker);
+            if (routeLine) map.removeLayer(routeLine);
 
-    // Zoom and fit bounds to show both the dispatch node and the incident location
-    const bounds = L.latLngBounds([[lat, lng], [dispatchLat, dispatchLng]]);
-    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-  }
+            if (rl.dispatch_node && rl.dispatch_node !== 'Allocating…') {
+                const nodeName = rl.dispatch_node;
+                let hash = 0;
+                for (let i = 0; i < nodeName.length; i++) {
+                    hash = nodeName.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                const offsetLat = ((Math.abs(hash) % 100) / 4000) - 0.012;
+                const offsetLng = (((Math.abs(hash) >> 8) % 100) / 4000) - 0.012;
+                const dispatchLat = lat + offsetLat;
+                const dispatchLng = lng + offsetLng;
 
-  // 2. RENDER THE RESULTS PANEL HTML
-  const html = `
-    <div class="panel-label enter-animation" style="animation-delay:.0s">Bayesian Forecast</div>
+                const dispatchIconSvg = L.divIcon({
+                    className: '',
+                    html: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+                <circle cx="20" cy="20" r="10" fill="#0A0E1A" stroke="#0FF4C6" stroke-width="2"/>
+                <circle cx="20" cy="20" r="5" fill="#0FF4C6"/>
+              </svg>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
 
-    <div class="result-grid">
-      <div class="result-card ${sevClass} enter-animation" style="animation-delay:.05s">
-        <div class="card-label">Impact Score</div>
-        <div class="card-value ${sevColor}">${sev.toFixed(1)}</div>
-        <div class="card-unit">/ 100 severity</div>
-        <span class="badge ${priorityBadgeClass}">${priority} Priority</span>
-      </div>
+                dispatchMarker = L.marker([dispatchLat, dispatchLng], { icon: dispatchIconSvg }).addTo(map)
+                    .bindPopup(`<b>Dispatch Station:</b> ${rl.dispatch_node}`);
 
-      <div class="result-card enter-animation" style="animation-delay:.1s">
-        <div class="card-label">Est. Duration</div>
-        <div class="card-value">${Math.round(duration)}</div>
-        <div class="card-unit">minutes</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono)">${confidence}</div>
-      </div>
+                routeLine = L.polyline([
+                    [dispatchLat, dispatchLng],
+                    [lat, lng]
+                ], {
+                    color: '#0FF4C6',
+                    weight: 3,
+                    dashArray: '6, 10',
+                    opacity: 0.85
+                }).addTo(map);
 
-      <div class="result-card enter-animation" style="animation-delay:.15s">
-        <div class="card-label">Road Closure</div>
-        <div class="card-value med ${(roadClosure || forcedClosure) ? 'red' : ''}">${(roadClosure || forcedClosure) ? '⛔ REQUIRED' : '✅ NOT NEEDED'}</div>
-        <div class="card-unit" style="margin-top:8px">${(roadClosure || forcedClosure) ? 'Barricades: ' + barricadesCount + ' units' : 'Traffic flow manageable'}</div>
-      </div>
+                const bounds = L.latLngBounds([
+                    [lat, lng],
+                    [dispatchLat, dispatchLng]
+                ]);
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+            }
 
-      <div class="result-card enter-animation" style="animation-delay:.2s">
-        <div class="card-label">Model Uncertainty</div>
-        <div class="card-value med" style="color:var(--amber)">${epistemic.toFixed(4)} σ</div>
-        <div class="uncert-bar"><div class="uncert-fill" style="width:${uncertainty}%"></div></div>
-        <div class="card-unit" style="margin-top:6px">${uncertainty < 30 ? 'High confidence' : uncertainty < 60 ? 'Moderate confidence' : 'Low confidence'}</div>
-      </div>
-    </div>
+            // ─── BUILD RESULTS HTML ───
+            const html = `
+            <div class="panel-label enter-animation" style="animation-delay:.0s">Bayesian Forecast</div>
 
-    <div class="panel-label enter-animation" style="animation-delay:.25s;margin-top:4px">LLM Reasoning Engine</div>
+            <div class="result-grid">
+              <div class="result-card ${sevClass} enter-animation" style="animation-delay:.05s">
+                <div class="card-label">Impact Score</div>
+                <div class="card-value ${sevColor}">${sev.toFixed(1)}</div>
+                <div class="card-unit">/ 100 severity</div>
+                <span class="badge ${priorityBadgeClass}">${priority} Priority</span>
+              </div>
 
-    <div class="sop-banner ${sop.cls} enter-animation" style="animation-delay:.3s">
-      <div class="sop-icon">${sop.icon}</div>
-      <div class="sop-text">
-        <div class="sop-title">${sop.label}</div>
-        <div class="sop-sub">${sop.sub}</div>
-      </div>
-    </div>
+              <div class="result-card enter-animation" style="animation-delay:.1s">
+                <div class="card-label">Est. Duration</div>
+                <div class="card-value">${Math.round(duration)}</div>
+                <div class="card-unit">minutes</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono)">${confidence}</div>
+              </div>
 
-    <div class="deploy-card enter-animation" style="animation-delay:.32s; margin-top: 8px;">
-      <div class="deploy-row">
-        <span class="deploy-key">Public Urgency Factor</span>
-        <span class="deploy-val amber">${urgency.toFixed(1)}x multiplier</span>
-      </div>
-      <div class="deploy-row">
-        <span class="deploy-key">SOP Override Status</span>
-        <span class="deploy-val ${forcedClosure ? 'red' : 'teal'}">${forcedClosure ? '⚠️ FORCE ROAD CLOSURE ACTIVE' : 'Normal Operations'}</span>
-      </div>
-    </div>
+              <div class="result-card enter-animation" style="animation-delay:.15s">
+                <div class="card-label">Road Closure</div>
+                <div class="card-value med ${(roadClosure || forcedClosure) ? 'red' : ''}">${(roadClosure || forcedClosure) ? '⛔ REQUIRED' : '✅ NOT NEEDED'}</div>
+                <div class="card-unit" style="margin-top:8px">${(roadClosure || forcedClosure) ? 'Barricades: ' + barricadesCount + ' units' : 'Traffic flow manageable'}</div>
+              </div>
 
-    <div class="panel-label enter-animation" style="animation-delay:.35s;margin-top:4px">Resource Deployment</div>
+              <div class="result-card enter-animation" style="animation-delay:.2s">
+                <div class="card-label">Model Uncertainty</div>
+                <div class="card-value med" style="color:var(--amber)">${epistemic.toFixed(4)} σ</div>
+                <div class="uncert-bar"><div class="uncert-fill" style="width:${uncertainty}%"></div></div>
+                <div class="card-unit" style="margin-top:6px">${uncertainty < 30 ? 'High confidence' : uncertainty < 60 ? 'Moderate confidence' : 'Low confidence'}</div>
+              </div>
+            </div>
 
-    <div class="deploy-card enter-animation" style="animation-delay:.4s">
-      <div class="deploy-row">
-        <span class="deploy-key">Dispatch Node</span>
-        <span class="deploy-val teal">${dispatchNode}</span>
-      </div>
-      <div class="deploy-row">
-        <span class="deploy-key">Officers Assigned</span>
-        <span class="deploy-val teal">${officers} units</span>
-      </div>
-      <div class="deploy-row">
-        <span class="deploy-key">Barricades</span>
-        <span class="deploy-val">${barricadesCount} units</span>
-      </div>
-      <div class="deploy-row">
-        <span class="deploy-key">Special Units</span>
-        <span class="deploy-val ${specialUnits.toLowerCase().includes('hazmat') ? 'red' : 'teal'}">${specialUnits}</span>
-      </div>
-      <div class="deploy-row">
-        <span class="deploy-key">Hazmat Risk</span>
-        <span class="deploy-val ${hazmatRisk ? 'red' : ''}">${hazmatRisk ? '⚠️ CONFIRMED' : 'None detected'}</span>
-      </div>
-    </div>
-  `;
+            <div class="panel-label enter-animation" style="animation-delay:.25s;margin-top:4px">LLM Reasoning Engine</div>
 
-  const container = document.getElementById('results');
-  container.innerHTML = html;
-  container.classList.remove('results-hidden');
-  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+            <div class="sop-banner ${sop.cls} enter-animation" style="animation-delay:.3s">
+              <div class="sop-icon">${sop.icon}</div>
+              <div class="sop-text">
+                <div class="sop-title">${sop.label}</div>
+                <div class="sop-sub">${sop.sub}</div>
+              </div>
+            </div>
 
-function renderError(msg) {
-  document.getElementById('placeholder').style.display = 'none';
-  const container = document.getElementById('results');
-  container.innerHTML = `
-    <div class="error-card enter-animation">
-      <strong>⚠️ API Error</strong><br/>
-      <span style="font-size:12px;opacity:.8;margin-top:6px;display:block">${msg}</span>
-      <span style="font-size:11px;color:var(--muted);margin-top:8px;display:block">
-        Make sure your FastAPI server is running and the <code>API_URL</code> in this file is correct.<br/>
-        CORS must be enabled on the server. Check the browser console for details.
-      </span>
-    </div>`;
-  container.classList.remove('results-hidden');
-}
+            <div class="deploy-card enter-animation" style="animation-delay:.32s; margin-top: 8px;">
+              <div class="deploy-row">
+                <span class="deploy-key">Public Urgency Factor</span>
+                <span class="deploy-val amber">${urgency.toFixed(1)}x multiplier</span>
+              </div>
+              <div class="deploy-row">
+                <span class="deploy-key">SOP Override Status</span>
+                <span class="deploy-val ${forcedClosure ? 'red' : 'teal'}">${forcedClosure ? '⚠️ FORCE ROAD CLOSURE ACTIVE' : 'Normal Operations'}</span>
+              </div>
+            </div>
 
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runPrediction();
-});
-</script>
+            <div class="panel-label enter-animation" style="animation-delay:.35s;margin-top:4px">Resource Deployment</div>
+
+            <div class="deploy-card enter-animation" style="animation-delay:.4s">
+              <div class="deploy-row">
+                <span class="deploy-key">Dispatch Node</span>
+                <span class="deploy-val teal">${dispatchNode}</span>
+              </div>
+              <div class="deploy-row">
+                <span class="deploy-key">Officers Assigned</span>
+                <span class="deploy-val teal">${officers} units</span>
+              </div>
+              <div class="deploy-row">
+                <span class="deploy-key">Barricades</span>
+                <span class="deploy-val">${barricadesCount} units</span>
+              </div>
+              <div class="deploy-row">
+                <span class="deploy-key">Special Units</span>
+                <span class="deploy-val ${specialUnits.toLowerCase().includes('hazmat') ? 'red' : 'teal'}">${specialUnits}</span>
+              </div>
+              <div class="deploy-row">
+                <span class="deploy-key">Hazmat Risk</span>
+                <span class="deploy-val ${hazmatRisk ? 'red' : ''}">${hazmatRisk ? '⚠️ CONFIRMED' : 'None detected'}</span>
+              </div>
+            </div>
+
+            <!-- Feedback trigger -->
+            <div class="feedback-trigger-wrap enter-animation" style="animation-delay:.45s">
+              <button class="feedback-trigger-btn" onclick="openFeedback()">
+                <span class="icon">📝</span> Provide operator feedback
+              </button>
+            </div>
+          `;
+
+            const container = document.getElementById('results');
+            container.innerHTML = html;
+            container.classList.remove('results-hidden');
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ─── RENDER ERROR ───
+        function renderError(msg) {
+            document.getElementById('placeholder').style.display = 'none';
+            const container = document.getElementById('results');
+            container.innerHTML = `
+            <div class="error-card enter-animation">
+              <strong>⚠️ API Error</strong><br/>
+              <span style="font-size:12px;opacity:.8;margin-top:6px;display:block">${msg}</span>
+              <span style="font-size:11px;color:var(--muted);margin-top:8px;display:block">
+                Make sure your FastAPI server is running and the <code>API_URL</code> in this file is correct.<br/>
+                CORS must be enabled on the server. Check the browser console for details.
+              </span>
+            </div>`;
+            container.classList.remove('results-hidden');
+        }
+
+        // ─── KEYBOARD SHORTCUT ───
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runPrediction();
+        });
+    </script>
 </body>
 </html>
